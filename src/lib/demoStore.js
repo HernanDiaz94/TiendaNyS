@@ -1,7 +1,9 @@
 import { demoProducts } from '../data/demoProducts.js';
+import { nextPurchasedAt } from './inventory.js';
 
 const PRODUCTS_KEY = 'nys-demo-products-v2';
 const ORDERS_KEY = 'nys-demo-orders-v2';
+const PURCHASES_KEY = 'nys-demo-purchases-v2';
 const memory = new Map();
 
 const STATUSES = ['pendiente', 'confirmado', 'preparando', 'listo', 'entregado', 'cancelado'];
@@ -40,11 +42,20 @@ function fail(code, message) {
 }
 
 function seedProducts() {
+  const now = new Date().toISOString();
   return demoProducts.map((product) => ({
     ...product,
     is_active: product.is_active !== false,
     featured: Boolean(product.featured),
+    purchased_at: product.purchased_at || product.created_at || now,
   }));
+}
+
+function withInventoryDefaults(product) {
+  return {
+    ...product,
+    purchased_at: product.purchased_at || product.created_at || new Date().toISOString(),
+  };
 }
 
 export function readDemoProducts() {
@@ -52,7 +63,7 @@ export function readDemoProducts() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) return parsed.map(withInventoryDefaults);
     } catch {
       /* fall back to the seed */
     }
@@ -78,6 +89,7 @@ export function createDemoProduct(payload) {
     ...payload,
     id: makeId(),
     created_at: new Date().toISOString(),
+    purchased_at: payload.purchased_at || new Date().toISOString(),
     is_active: payload.is_active !== false,
     featured: Boolean(payload.featured),
   };
@@ -216,13 +228,75 @@ export function updateDemoOrderStatus(id, status) {
   return orders[index];
 }
 
+function readDemoPurchases() {
+  const raw = readRaw(PURCHASES_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeDemoPurchases(purchases) {
+  writeRaw(PURCHASES_KEY, JSON.stringify(purchases));
+}
+
+export function listDemoPurchases() {
+  return [...readDemoPurchases()].sort(
+    (a, b) => new Date(b.purchased_at || 0).getTime() - new Date(a.purchased_at || 0).getTime(),
+  );
+}
+
+export function createDemoPurchase({ productId, quantity, unitCost, supplier, purchasedAt }) {
+  const products = readDemoProducts();
+  const index = products.findIndex((product) => String(product.id) === String(productId));
+  if (index === -1) throw fail('PRODUCT_NOT_FOUND', 'El artículo ya no existe.');
+
+  const amount = Math.trunc(Number(quantity));
+  if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+    throw fail('INVALID_QUANTITY', 'La cantidad comprada no es válida.');
+  }
+
+  const product = products[index];
+  const cost = unitCost === null || unitCost === undefined || unitCost === ''
+    ? null
+    : Math.round(Number(unitCost) * 100) / 100;
+  const supplierName = String(supplier || '').trim().slice(0, 80);
+  const entryDate = purchasedAt || new Date().toISOString();
+
+  const updated = {
+    ...product,
+    stock: Math.min(9999, Number(product.stock) + amount),
+    purchased_at: nextPurchasedAt(product, entryDate),
+  };
+  products[index] = updated;
+  writeDemoProducts(products);
+
+  const purchase = {
+    id: makeId(),
+    product_id: product.id,
+    product_name: product.name,
+    quantity: amount,
+    unit_cost: cost,
+    supplier: supplierName,
+    purchased_at: entryDate,
+    created_at: new Date().toISOString(),
+  };
+  writeDemoPurchases([purchase, ...readDemoPurchases()]);
+  return { product: updated, purchase };
+}
+
 export function resetDemoData() {
   try {
     window.localStorage.removeItem(PRODUCTS_KEY);
     window.localStorage.removeItem(ORDERS_KEY);
+    window.localStorage.removeItem(PURCHASES_KEY);
   } catch {
     /* ignore */
   }
   memory.delete(PRODUCTS_KEY);
   memory.delete(ORDERS_KEY);
+  memory.delete(PURCHASES_KEY);
 }

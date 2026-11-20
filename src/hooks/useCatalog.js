@@ -65,15 +65,19 @@ export function useCatalog({ includeInactive = false } = {}) {
   }, [load]);
 
   const createProduct = useCallback(async (payload) => {
+    const record = {
+      ...payload,
+      purchased_at: payload.purchased_at || new Date().toISOString(),
+    };
     if (!isSupabaseConfigured) {
-      const created = createDemoProduct(payload);
+      const created = createDemoProduct(record);
       setProducts(listDemoProducts());
       return created;
     }
 
     const { data, error: requestError } = await supabase
       .from('products')
-      .insert(payload)
+      .insert(record)
       .select()
       .single();
 

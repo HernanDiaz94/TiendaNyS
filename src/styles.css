@@ -3427,6 +3427,113 @@ a {
   margin-top: 6px;
 }
 
+/* ---------- Inventory / purchases ---------- */
+
+.product-row-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-2) !important;
+}
+
+.inventory-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 11px 14px;
+  border: 1px solid #e0b35a;
+  background: #fff8e8;
+  color: #6b4a00;
+}
+
+.inventory-alert p {
+  flex: 1;
+  min-width: 200px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.inventory-alert .link-btn {
+  font-size: 9px;
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.purchase-list {
+  display: grid;
+  gap: 8px;
+}
+
+.purchase-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.purchase-main {
+  min-width: 0;
+}
+
+.purchase-main strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.purchase-main span,
+.purchase-numbers span {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.purchase-numbers {
+  text-align: right;
+}
+
+.purchase-numbers span {
+  display: block;
+}
+
+.purchase-numbers strong {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.purchase-total-preview {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  background: #fbfbf8;
+}
+
+.purchase-total-preview span {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.purchase-total-preview strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.purchase-modal {
+  width: min(560px, 100%);
+}
+
 /* ---------- Modal forms ---------- */
 
 .form-modal {
@@ -3891,7 +3998,7 @@ a {
   }
 
   .stat-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   }
 
   .admin-section-head {

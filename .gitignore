@@ -36,3 +36,4 @@ yarn-error.log*
 
 # Storybook CI
 storybook-static/
+.vercel

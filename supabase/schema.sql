@@ -18,6 +18,10 @@ create table if not exists public.products (
   created_at timestamptz not null default now()
 );
 
+-- Fecha del stock más antiguo que sigue disponible. Alimenta la alerta de +6 meses.
+alter table public.products add column if not exists purchased_at timestamptz;
+update public.products set purchased_at = created_at where purchased_at is null;
+
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   role text not null default 'customer' check (role in ('admin', 'customer')),
@@ -45,9 +49,22 @@ create table if not exists public.order_items (
   unit_price numeric(12,2) not null check (unit_price > 0)
 );
 
+-- Lotes de compra: historial de ingresos de mercadería con costo y proveedor.
+create table if not exists public.purchases (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references public.products(id) on delete set null,
+  product_name text not null default '',
+  quantity integer not null check (quantity between 1 and 9999),
+  unit_cost numeric(12,2) check (unit_cost is null or unit_cost >= 0),
+  supplier text not null default '' check (char_length(supplier) <= 80),
+  purchased_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 create index if not exists order_items_order_id_idx on public.order_items (order_id);
 create index if not exists products_active_created_idx on public.products (is_active, created_at desc);
+create index if not exists purchases_purchased_at_idx on public.purchases (purchased_at desc);
 
 -- Migración de categorías: de la taxonomía vieja ("Indumentaria") a una más
 -- útil para una tienda urbana. Es idempotente y conserva los productos existentes.
@@ -72,6 +89,7 @@ alter table public.products enable row level security;
 alter table public.profiles enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
+alter table public.purchases enable row level security;
 
 create or replace function public.is_store_admin()
 returns boolean
@@ -107,13 +125,17 @@ create policy "admins update orders" on public.orders
 drop policy if exists "admins read order items" on public.order_items;
 create policy "admins read order items" on public.order_items
   for select to authenticated using (public.is_store_admin());
+drop policy if exists "admins read purchases" on public.purchases;
+create policy "admins read purchases" on public.purchases
+  for select to authenticated using (public.is_store_admin());
 
-revoke all on public.profiles, public.orders, public.order_items from anon, authenticated;
+revoke all on public.profiles, public.orders, public.order_items, public.purchases from anon, authenticated;
 grant select on public.profiles to authenticated;
 grant select on public.products to anon, authenticated;
 grant insert, update, delete on public.products to authenticated;
 grant select, update on public.orders to authenticated;
 grant select on public.order_items to authenticated;
+grant select on public.purchases to authenticated;
 
 -- Único canal público para crear pedidos: valida los campos, vuelve a consultar precios
 -- y bloquea filas de stock para evitar sobreventa. Nunca confía en el precio del navegador.
@@ -273,3 +295,56 @@ create policy "product images admin update" on storage.objects
 drop policy if exists "product images admin delete" on storage.objects;
 create policy "product images admin delete" on storage.objects
   for delete to authenticated using (bucket_id = 'product-images' and public.is_store_admin());
+
+-- Registrar una compra: guarda el lote, suma stock y conserva la fecha del
+-- stock más antiguo para que la alerta de +6 meses no se reinicie al reponer.
+create or replace function public.register_purchase(
+  p_product_id uuid,
+  p_quantity integer,
+  p_unit_cost numeric,
+  p_supplier text,
+  p_purchased_at timestamptz
+)
+returns public.products
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_product public.products;
+  v_when timestamptz := coalesce(p_purchased_at, now());
+begin
+  if not public.is_store_admin() then raise exception 'NOT_ADMIN'; end if;
+  if p_quantity is null or p_quantity < 1 or p_quantity > 9999 then
+    raise exception 'INVALID_QUANTITY';
+  end if;
+  if p_unit_cost is not null and (p_unit_cost < 0 or p_unit_cost > 99999999) then
+    raise exception 'INVALID_COST';
+  end if;
+  if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
+    raise exception 'INVALID_SUPPLIER';
+  end if;
+  if v_when > now() + interval '1 day' or v_when < timestamptz '2000-01-01' then
+    raise exception 'INVALID_DATE';
+  end if;
+
+  select * into v_product from public.products where id = p_product_id for update;
+  if not found then raise exception 'PRODUCT_NOT_FOUND'; end if;
+
+  insert into public.purchases (product_id, product_name, quantity, unit_cost, supplier, purchased_at)
+  values (p_product_id, v_product.name, p_quantity, p_unit_cost, coalesce(btrim(p_supplier), ''), v_when);
+
+  update public.products
+    set stock = least(9999, stock + p_quantity),
+        purchased_at = case
+          when stock > 0 and purchased_at is not null then least(purchased_at, v_when)
+          else v_when
+        end
+    where id = p_product_id
+    returning * into v_product;
+
+  return v_product;
+end;
+$$;
+revoke all on function public.register_purchase(uuid, integer, numeric, text, timestamptz) from public, anon;
+grant execute on function public.register_purchase(uuid, integer, numeric, text, timestamptz) to authenticated;

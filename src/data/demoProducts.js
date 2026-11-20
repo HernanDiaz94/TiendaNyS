@@ -130,6 +130,7 @@ export const demoProducts = [
     featured: false,
     is_active: true,
     created_at: daysAgo(19),
+    purchased_at: daysAgo(212),
   },
   {
     id: 'nys-010',
@@ -158,6 +159,7 @@ export const demoProducts = [
     featured: false,
     is_active: true,
     created_at: daysAgo(30),
+    purchased_at: daysAgo(248),
   },
   {
     id: 'nys-012',

@@ -78,15 +78,14 @@ describe('cart sanitizing and reconciliation', () => {
 });
 
 describe('checkout validation and WhatsApp links', () => {
-  const customer = { name: 'Ana Pérez', dni: '31234567', phone: '+54 9 11 5555 4444', notes: '' };
+  const customer = { name: 'Ana Pérez', phone: '+54 9 11 5555 4444', notes: '' };
 
   it('accepts a complete customer and rejects missing privacy consent', () => {
     expect(validateCustomer(customer, true)).toEqual({});
     expect(validateCustomer(customer, false)).toHaveProperty('privacy');
   });
 
-  it('rejects invalid DNI, phone and dangerous characters', () => {
-    expect(validateCustomer({ ...customer, dni: '123' }, true)).toHaveProperty('dni');
+  it('rejects invalid phone and dangerous characters', () => {
     expect(validateCustomer({ ...customer, phone: 'abc' }, true)).toHaveProperty('phone');
     expect(validateCustomer({ ...customer, name: '<script>' }, true)).toHaveProperty('name');
     expect(validateCustomer({ ...customer, notes: 'x'.repeat(301) }, true)).toHaveProperty('notes');

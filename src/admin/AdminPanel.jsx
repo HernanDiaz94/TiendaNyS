@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   ArrowUpRight,
+  CalendarClock,
   Eye,
   EyeOff,
   LogOut,
   Minus,
   Package,
+  PackagePlus,
   Pencil,
   Plus,
   RefreshCw,
@@ -17,11 +19,18 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useCatalog } from '../hooks/useCatalog.js';
+import { usePurchases } from '../hooks/usePurchases.js';
 import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 import { listDemoOrders, resetDemoData, updateDemoOrderStatus } from '../lib/demoStore.js';
 import { buildWhatsAppUrl, formatPrice, shortReference } from '../lib/shop.js';
+import {
+  formatShortDate,
+  isStaleStock,
+  listStaleProducts,
+} from '../lib/inventory.js';
 import { normalizeText } from '../lib/products.js';
 import { ProductForm } from './ProductForm.jsx';
+import { PurchaseForm } from './PurchaseForm.jsx';
 import { Modal } from '../components/Modal.jsx';
 import { Notice, ProductImage, Spinner } from '../components/ui.jsx';
 
@@ -57,6 +66,7 @@ function adminError(error, fallback) {
 
 export function AdminPanel({ session, isDemo, onLogout }) {
   const catalog = useCatalog({ includeInactive: true });
+  const purchasesLog = usePurchases();
   const [tab, setTab] = useState('orders');
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -69,6 +79,8 @@ export function AdminPanel({ session, isDemo, onLogout }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [purchaseProductId, setPurchaseProductId] = useState('');
   const [busyKey, setBusyKey] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -113,9 +125,18 @@ export function AdminPanel({ session, isDemo, onLogout }) {
 
   const refreshAll = async () => {
     setRefreshing(true);
-    await Promise.all([catalog.refresh(), loadOrders({ silent: true })]);
+    await Promise.all([
+      catalog.refresh(),
+      loadOrders({ silent: true }),
+      purchasesLog.refresh({ silent: true }),
+    ]);
     setRefreshing(false);
   };
+
+  const staleProducts = useMemo(
+    () => listStaleProducts(catalog.products),
+    [catalog.products],
+  );
 
   const stats = useMemo(() => {
     const activeOrders = orders.filter((order) => order.status !== 'cancelado');
@@ -125,8 +146,9 @@ export function AdminPanel({ session, isDemo, onLogout }) {
       products: catalog.products.filter((product) => product.is_active !== false).length,
       low: catalog.products.filter((product) => Number(product.stock) > 0 && Number(product.stock) <= 2).length,
       out: catalog.products.filter((product) => Number(product.stock) < 1).length,
+      stale: staleProducts.length,
     };
-  }, [orders, catalog.products]);
+  }, [orders, catalog.products, staleProducts]);
 
   const filteredOrders = useMemo(() => {
     const query = normalizeText(orderQuery);
@@ -150,6 +172,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
       if (productFilter === 'sin-stock' && Number(product.stock) > 0) return false;
       if (productFilter === 'stock-bajo' && !(Number(product.stock) > 0 && Number(product.stock) <= 2)) return false;
       if (productFilter === 'destacados' && !product.featured) return false;
+      if (productFilter === 'antiguos' && !isStaleStock(product)) return false;
       if (!query) return true;
       return normalizeText([product.name, product.category, product.color].join(' ')).includes(query);
     });
@@ -200,6 +223,22 @@ export function AdminPanel({ session, isDemo, onLogout }) {
   const openEdit = (product) => {
     setEditing(product);
     setFormOpen(true);
+  };
+
+  const openPurchase = (product = null) => {
+    setPurchaseProductId(product ? String(product.id) : '');
+    setPurchaseOpen(true);
+  };
+
+  const savePurchase = async (payload) => {
+    const product = await purchasesLog.registerPurchase(payload);
+    await catalog.refresh({ silent: true });
+    showFeedback(
+      'success',
+      `Compra registrada: +${payload.quantity} u. de ${product?.name || 'artículo'}. El stock ya está actualizado.`,
+    );
+    setPurchaseOpen(false);
+    setPurchaseProductId('');
   };
 
   const saveProduct = async (payload) => {
@@ -362,7 +401,31 @@ export function AdminPanel({ session, isDemo, onLogout }) {
               <span>Sin stock · {stats.low} con stock bajo</span>
             </div>
           </article>
+          <article className={`stat-card ${stats.stale > 0 ? 'stat-card--alert' : ''}`}>
+            <span className="stat-icon"><CalendarClock size={18} aria-hidden="true" /></span>
+            <div>
+              <strong>{stats.stale}</strong>
+              <span>Con más de 6 meses</span>
+            </div>
+          </article>
         </div>
+
+        {staleProducts.length > 0 && (
+          <div className="inventory-alert">
+            <AlertTriangle size={17} aria-hidden="true" />
+            <p>
+              <strong>{staleProducts.length === 1 ? 'Hay 1 artículo' : `Hay ${staleProducts.length} artículos`}</strong>
+              {' '}con más de 6 meses en inventario. Conviene rotarlos con una promo o revisar el precio.
+            </p>
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => { setTab('catalog'); setProductFilter('antiguos'); }}
+            >
+              Ver artículos
+            </button>
+          </div>
+        )}
 
         <div className="admin-tabs" role="tablist" aria-label="Secciones del panel">
           <button
@@ -382,6 +445,15 @@ export function AdminPanel({ session, isDemo, onLogout }) {
             onClick={() => setTab('catalog')}
           >
             Catálogo y stock <span>{catalog.products.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'purchases'}
+            className={tab === 'purchases' ? 'active' : ''}
+            onClick={() => setTab('purchases')}
+          >
+            Compras <span>{purchasesLog.purchases.length}</span>
           </button>
         </div>
 
@@ -515,7 +587,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
               </div>
             )}
           </section>
-        ) : (
+        ) : tab === 'catalog' ? (
           <section className="admin-section" role="tabpanel">
             <div className="admin-section-head">
               <div>
@@ -544,6 +616,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                   <option value="ocultos">Ocultos</option>
                   <option value="sin-stock">Sin stock</option>
                   <option value="stock-bajo">Stock bajo</option>
+                  <option value="antiguos">+6 meses en stock</option>
                   <option value="destacados">Destacados</option>
                 </select>
                 <button type="button" className="btn btn--primary btn--sm" onClick={openCreate}>
@@ -577,6 +650,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                 {filteredProducts.map((product) => {
                   const isOut = Number(product.stock) < 1;
                   const isInactive = product.is_active === false;
+                  const isStale = isStaleStock(product);
                   const rowBusy = busyKey.includes(product.id);
                   return (
                     <article
@@ -593,11 +667,15 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                           {' · '}
                           {Array.isArray(product.sizes) && product.sizes.length ? product.sizes.join(' / ') : 'Único'}
                         </span>
+                        <span className="product-row-date">
+                          Ingreso: {formatShortDate(product.purchased_at)}
+                        </span>
                         <div className="row-badges">
                           {product.featured && <span className="mini-badge">Destacado</span>}
                           {isInactive && <span className="mini-badge mini-badge--muted">Oculto</span>}
                           {isOut && <span className="mini-badge mini-badge--alert">Sin stock</span>}
                           {!isOut && Number(product.stock) <= 2 && <span className="mini-badge mini-badge--warn">Stock bajo</span>}
+                          {isStale && <span className="mini-badge mini-badge--alert">+6 meses</span>}
                         </div>
                       </div>
 
@@ -666,6 +744,15 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                         <button
                           type="button"
                           className="icon-btn"
+                          onClick={() => openPurchase(product)}
+                          aria-label={`Registrar compra de ${product.name}`}
+                          title="Registrar compra"
+                        >
+                          <PackagePlus size={16} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
                           onClick={() => openEdit(product)}
                           aria-label={`Editar ${product.name}`}
                         >
@@ -686,6 +773,66 @@ export function AdminPanel({ session, isDemo, onLogout }) {
               </div>
             )}
           </section>
+        ) : (
+          <section className="admin-section" role="tabpanel">
+            <div className="admin-section-head">
+              <div>
+                <h2>Compras e ingresos</h2>
+                <p>Registrá cada lote: suma stock y guarda fecha, costo y proveedor.</p>
+              </div>
+              <button type="button" className="btn btn--primary" onClick={() => openPurchase()}>
+                <PackagePlus size={16} aria-hidden="true" /> Registrar compra
+              </button>
+            </div>
+
+            {purchasesLog.error && (
+              <Notice tone="error">
+                {purchasesLog.error}{' '}
+                <button type="button" className="link-btn link-btn--inline" onClick={() => purchasesLog.refresh()}>
+                  Reintentar
+                </button>
+              </Notice>
+            )}
+
+            {purchasesLog.loading ? (
+              <div className="admin-loading"><Spinner label="Cargando compras" /> Cargando compras…</div>
+            ) : purchasesLog.purchases.length === 0 ? (
+              <div className="admin-empty">
+                <PackagePlus size={26} aria-hidden="true" />
+                <h3>Todavía no registraste compras.</h3>
+                <p>Cuando ingrese mercadería, registrala acá para llevar stock, costos y antigüedad.</p>
+                <button type="button" className="btn btn--primary" onClick={() => openPurchase()}>
+                  <PackagePlus size={15} aria-hidden="true" /> Registrar la primera
+                </button>
+              </div>
+            ) : (
+              <div className="purchase-list">
+                {purchasesLog.purchases.map((purchase) => {
+                  const cost = purchase.unit_cost === null || purchase.unit_cost === undefined
+                    ? null
+                    : Number(purchase.unit_cost);
+                  return (
+                    <article className="purchase-row" key={purchase.id}>
+                      <div className="purchase-main">
+                        <strong>{purchase.product_name}</strong>
+                        <span>
+                          {formatShortDate(purchase.purchased_at)}
+                          {purchase.supplier ? ` · ${purchase.supplier}` : ''}
+                        </span>
+                      </div>
+                      <div className="purchase-numbers">
+                        <span>
+                          {purchase.quantity} u.
+                          {cost !== null ? ` × ${formatPrice(cost)}` : ' · sin costo'}
+                        </span>
+                        <strong>{cost !== null ? formatPrice(cost * purchase.quantity) : '—'}</strong>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         )}
       </main>
 
@@ -694,6 +841,15 @@ export function AdminPanel({ session, isDemo, onLogout }) {
         product={editing}
         onClose={() => { setFormOpen(false); setEditing(null); }}
         onSave={saveProduct}
+        isDemo={isDemo}
+      />
+
+      <PurchaseForm
+        open={purchaseOpen}
+        products={catalog.products}
+        initialProductId={purchaseProductId}
+        onClose={() => { setPurchaseOpen(false); setPurchaseProductId(''); }}
+        onSave={savePurchase}
         isDemo={isDemo}
       />
 

@@ -18,7 +18,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado).
 - **Estilos:** CSS vanilla (paleta tierra suave)
 - **Backend:** Supabase (opcional, modo demo con localStorage)
 - **Hosting:** Vercel (deploy automático desde GitHub)
-- **Testing:** Vitest (25 tests)
+- **Testing:** Vitest (32 tests)
 
 ---
 
@@ -42,6 +42,10 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado).
 - [x] Gestión de pedidos
 - [x] Upload de imágenes
 - [x] Modo demo (localStorage)
+- [x] Registro de compras por lote (cantidad, costo unitario, proveedor y fecha)
+- [x] Las compras suman stock automáticamente y quedan en el historial
+- [x] Fecha de ingreso visible en cada artículo del catálogo
+- [x] Alerta y filtro de artículos con más de 6 meses en inventario
 
 ### Adaptaciones a Catamarca
 - [x] Texto "CATAMARCA" en todo el sitio
@@ -90,7 +94,12 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado).
 |---------|-------------|
 | `src/admin/AdminApp.jsx` | Panel de administración |
 | `src/admin/AdminLogin.jsx` | Login con usuario `admin` |
+| `src/admin/AdminPanel.jsx` | Pedidos, catálogo, stock y compras |
+| `src/admin/ProductForm.jsx` | Alta y edición de artículos |
+| `src/admin/PurchaseForm.jsx` | Registro de compras (lote, costo, proveedor, fecha) |
 | `src/hooks/useAuth.js` | Validación de credenciales demo |
+| `src/hooks/usePurchases.js` | Historial de compras (Supabase o demo) |
+| `src/lib/inventory.js` | Antigüedad de stock, validación de compras y alerta de +6 meses |
 
 ---
 
@@ -194,12 +203,25 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 ## 🎯 Pendientes / Ideas Futuras
 
+### 🧾 Compras e inventario (implementado)
+
+**Cómo funciona:**
+- En el panel, pestaña **Compras → Registrar compra**: elegís artículo, cantidad, costo unitario, proveedor y fecha.
+- Cada compra crea un lote en `purchases`, suma stock y actualiza la fecha de ingreso.
+- `products.purchased_at` guarda la fecha del stock **más antiguo** que sigue en la tienda. Si reponés un artículo que todavía tenía stock viejo, la fecha no se reinicia.
+- Si un artículo tiene stock y su ingreso supera los **183 días (6 meses)**, aparece la alerta "Hay N artículos con más de 6 meses en inventario", la tarjeta del panel, el badge `+6 meses` y el filtro de catálogo.
+
+**Migración en Supabase:** ejecutar `supabase/schema.sql` (es idempotente). Agrega:
+- columna `products.purchased_at`
+- tabla `purchases` (solo lectura para admin)
+- función `register_purchase(...)` que registra el lote y suma stock en una transacción
+
 ### 🔜 Próximos pasos a implementar (prioridad alta)
-- [ ] **Mejorar formulario de la bolsa de pedido:** Eliminar campo DNI, solo pedir Nombre y Número de WhatsApp
-- [ ] **Detalle de productos en mensaje de WhatsApp:** El mensaje debe incluir información detallada de cada producto (nombre, talle, cantidad, precio unitario y subtotal)
-- [ ] **Control de compra de productos en admin:** Registrar compras de productos vinculadas al stock (cantidad comprada, proveedor, costo)
-- [ ] **Fecha de compra de producto:** Almacenar fecha de ingreso/compra de cada lote de producto
-- [ ] **Alerta de inventario antiguo:** Aviso o alerta para productos con más de 6 meses en el inventario (basado en fecha de compra/ingreso)
+- [x] **Mejorar formulario de la bolsa de pedido:** Eliminar campo DNI, solo pedir Nombre y Número de WhatsApp
+- [x] **Detalle de productos en mensaje de WhatsApp:** El mensaje incluye nombre, talle, cantidad y precio
+- [x] **Control de compra de productos en admin:** Compras vinculadas al stock (cantidad, proveedor, costo)
+- [x] **Fecha de compra de producto:** Fecha de ingreso por artículo y por lote
+- [x] **Alerta de inventario antiguo:** Aviso para productos con más de 6 meses en inventario
 
 ### Otras mejoras
 - [ ] Conectar Supabase para persistencia real de datos
@@ -231,7 +253,7 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 25 tests
+npm test             # Ejecuta 32 tests
 
 # Build
 npm run build        # Genera dist/ para producción

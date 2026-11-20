@@ -1,8 +1,8 @@
 import { ArrowDownRight, ArrowRight, MapPin, Package, ShieldCheck } from 'lucide-react';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=88';
-const HERO_DETAIL = 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=800&q=85';
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1576043635022-423d5d578d7f?auto=format&fit=crop&w=1400&q=88';
+const HERO_DETAIL = 'https://images.unsplash.com/photo-1556813353aca5?auto=format&fit=crop&w=800&q=85';
 
 const MARQUEE_ITEMS = [
   'N&S INDUMENTARIA',

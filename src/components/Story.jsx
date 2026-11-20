@@ -1,8 +1,8 @@
 import { ArrowUpRight, Instagram } from 'lucide-react';
 import { ProductImage } from './ui.jsx';
 
-const STORY_MAIN = 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1200&q=85';
-const STORY_DETAIL = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=85';
+const STORY_MAIN = 'https://images.unsplash.com/photo-1576043635022-423d5d578d7f?auto=format&fit=crop&w=1200&q=85';
+const STORY_DETAIL = 'https://images.unsplash.com/photo-1556813353aca5?auto=format&fit=crop&w=700&q=85';
 
 export function Story({ instagramUrl, handle }) {
   return (
@@ -15,7 +15,7 @@ export function Story({ instagramUrl, handle }) {
           <figure className="story-detail">
             <ProductImage src={STORY_DETAIL} alt="Detalle de zapatillas de la colección" />
           </figure>
-          <span className="story-stamp" aria-hidden="true">BS.AS<br />EST. 2025</span>
+          <span className="story-stamp" aria-hidden="true">CTA<br />EST. 2025</span>
         </div>
 
         <div className="story-copy">

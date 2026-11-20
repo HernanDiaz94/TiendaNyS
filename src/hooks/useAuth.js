@@ -3,6 +3,7 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 const DEMO_SESSION_KEY = 'nys-demo-session';
 export const DEMO_PASSWORD = import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'nys-demo';
+export const DEMO_USERNAME = import.meta.env.VITE_DEMO_ADMIN_USERNAME || 'admin';
 
 function readDemoSession() {
   try {
@@ -42,14 +43,17 @@ export function useAuth() {
     };
   }, [isDemo]);
 
-  const signIn = useCallback(async ({ email, password }) => {
+  const signIn = useCallback(async ({ username, password }) => {
     if (isDemo) {
       if (String(password) !== DEMO_PASSWORD) {
         throw new Error('La contraseña de demostración no es correcta.');
       }
+      if (String(username).trim() !== DEMO_USERNAME) {
+        throw new Error('El nombre de usuario no es correcto.');
+      }
       const demoSession = {
         demo: true,
-        user: { email: String(email || 'demo@nys.local').trim() },
+        user: { username: String(username).trim() },
       };
       try {
         window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoSession));

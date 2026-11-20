@@ -12,7 +12,7 @@ import { DEMO_PASSWORD } from '../hooks/useAuth.js';
 import { ErrorNote, Notice, Spinner } from '../components/ui.jsx';
 
 export function AdminLogin({ onLogin, isDemo }) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -23,7 +23,7 @@ export function AdminLogin({ onLogin, isDemo }) {
     setBusy(true);
     setError('');
     try {
-      await onLogin({ email, password });
+      await onLogin({ username, password });
     } catch (loginError) {
       setError(loginError.message || 'No pudimos iniciar sesión.');
     } finally {
@@ -69,21 +69,21 @@ export function AdminLogin({ onLogin, isDemo }) {
           {isDemo && (
             <Notice tone="info">
               <strong>Modo demostración.</strong> No hay Supabase conectado. Entrá con
-              cualquier correo y la contraseña <code>{DEMO_PASSWORD}</code>. Los cambios
+              el nombre de usuario <strong>admin</strong> y la contraseña <code>{DEMO_PASSWORD}</code>. Los cambios
               quedan solo en este navegador.
             </Notice>
           )}
 
           <form className="auth-form" onSubmit={submit} noValidate>
             <div className="field">
-              <label htmlFor="admin-email">Correo electrónico</label>
+              <label htmlFor="admin-username">Nombre de usuario</label>
               <input
-                id="admin-email"
-                type="email"
+                id="admin-username"
+                type="text"
                 autoComplete="username"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder={isDemo ? 'demo@nys.local' : 'duena@ejemplo.com'}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder={isDemo ? 'admin' : 'tu-usuario'}
                 required={!isDemo}
                 data-autofocus
               />

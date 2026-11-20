@@ -1621,6 +1621,23 @@ a {
   color: rgba(255, 255, 255, 0.38);
 }
 
+.foot-addr {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 10px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.foot-addr span {
+  display: block;
+}
+
+.foot-addr span + span {
+  color: rgba(255, 255, 255, 0.42);
+}
+
 /* ---------- Image fallback ---------- */
 
 .img-fallback {

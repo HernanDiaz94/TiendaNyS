@@ -194,6 +194,11 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 ## 🎯 Pendientes / Ideas Futuras
 
+### 🔜 Próximos pasos a implementar (prioridad alta)
+- [ ] **Mejorar formulario de la bolsa de pedido:** Eliminar campo DNI, solo pedir Nombre y Número de WhatsApp
+- [ ] **Detalle de productos en mensaje de WhatsApp:** El mensaje debe incluir información detallada de cada producto (nombre, talle, cantidad, precio unitario y subtotal)
+
+### Otras mejoras
 - [ ] Conectar Supabase para persistencia real de datos
 - [ ] Agregar más productos al catálogo
 - [ ] Configurar MercadoPago para pagos online

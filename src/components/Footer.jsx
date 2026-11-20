@@ -1,5 +1,6 @@
 import { ArrowUpRight, Instagram } from 'lucide-react';
 import { WhatsAppIcon } from './ui.jsx';
+import { SITE } from '../config/site.js';
 
 export function Footer({ instagramUrl, whatsappUrl, handle }) {
   return (
@@ -37,6 +38,10 @@ export function Footer({ instagramUrl, whatsappUrl, handle }) {
         <p className="copyright">
           © {new Date().getFullYear()} NyS Indumentaria · Hecho con cariño en Catamarca
         </p>
+        <div className="foot-addr">
+          <span>{SITE.direccion}</span>
+          <span>{SITE.horarios}</span>
+        </div>
       </div>
     </footer>
   );

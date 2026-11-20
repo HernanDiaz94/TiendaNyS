@@ -173,9 +173,6 @@ export function validateCustomer(customer, privacyAccepted) {
   if (name.length < 2 || name.length > 100 || /[<>]/.test(name)) {
     errors.name = 'Ingresá tu nombre y apellido (entre 2 y 100 caracteres).';
   }
-  if (!normalizeDni(customer?.dni)) {
-    errors.dni = 'Escribí un DNI válido de 7 u 8 números, sin puntos.';
-  }
   if (
     phone.length < 8
     || phone.length > 30
@@ -205,8 +202,18 @@ export function buildWhatsAppUrl(number, message) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildOrderMessage({ reference, customerName, total }) {
-  return `Hola! Soy ${customerName}. Acabo de enviar el pedido #${reference} por ${formatPrice(total)} en NyS Indumentaria. ¿Me confirman disponibilidad y entrega?`;
+export function buildOrderMessage({ reference, customerName, total, items = [] }) {
+  const lines = items.map(
+    (item) => `• ${item.quantity} × ${item.name || item.product_name}${item.size && item.size !== 'Único' ? ` (talle ${item.size})` : ''} — ${formatPrice((item.unit_price ?? item.price) * item.quantity)}`,
+  );
+  return [
+    `Hola! Soy ${customerName}. Acabo de enviar el pedido #${reference} en NyS Indumentaria.`,
+    '',
+    ...lines,
+    '',
+    `Total: ${formatPrice(total)}`,
+    '¿Me confirman disponibilidad y entrega?',
+  ].join('\n');
 }
 
 export function buildInquiryMessage({ items = [], total = 0 }) {

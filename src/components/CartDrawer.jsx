@@ -25,7 +25,7 @@ import { createDemoOrder } from '../lib/demoStore.js';
 import { Modal } from './Modal.jsx';
 import { ErrorNote, Notice, ProductImage, Spinner, WhatsAppIcon } from './ui.jsx';
 
-const EMPTY_CUSTOMER = { name: '', dni: '', phone: '', notes: '' };
+const EMPTY_CUSTOMER = { name: '', phone: '', notes: '' };
 
 function Field({ id, label, error, optional, children }) {
   return (
@@ -112,7 +112,6 @@ export function CartDrawer({
       if (isSupabaseConfigured) {
         const { data, error } = await supabase.rpc('place_order', {
           p_customer_name: customer.name.trim(),
-          p_customer_dni: customer.dni.replace(/\D/g, ''),
           p_customer_phone: customer.phone.trim(),
           p_delivery_notes: customer.notes.trim().slice(0, 300),
           p_items: cart.map(({ id, quantity, size }) => ({
@@ -129,7 +128,6 @@ export function CartDrawer({
         const demoOrder = createDemoOrder({
           customer: {
             name: customer.name,
-            dni: customer.dni,
             phone: customer.phone,
             notes: customer.notes,
           },
@@ -158,8 +156,8 @@ export function CartDrawer({
       } else if (code.includes('ITEM_UNAVAILABLE') || code.includes('INVALID_SIZE')) {
         setFormError('Uno de los artículos ya no está disponible en el talle elegido. Revisá tu bolsa.');
         onRefresh?.();
-      } else if (code.includes('INVALID_CUSTOMER_NAME') || code.includes('INVALID_DNI') || code.includes('INVALID_PHONE')) {
-        setFormError('Revisá los datos personales: el nombre, el DNI o el teléfono no son válidos.');
+      } else if (code.includes('INVALID_CUSTOMER_NAME') || code.includes('INVALID_PHONE')) {
+        setFormError('Revisá los datos personales: el nombre o el teléfono no son válidos.');
       } else if (code.includes('INVALID_ITEMS') || code.includes('INVALID_ITEM')) {
         setFormError('La bolsa tiene un artículo con datos inválidos. Volvé a cargarlo.');
       } else {
@@ -194,6 +192,7 @@ export function CartDrawer({
         reference: shortReference(order.id),
         customerName: order.customer,
         total: order.total,
+        items: order.items,
         modalidad,
       }),
     )
@@ -299,21 +298,6 @@ export function CartDrawer({
                 />
               </Field>
 
-              <Field id="customer-dni" label="DNI" error={errors.dni}>
-                <input
-                  id="customer-dni"
-                  name="dni"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={12}
-                  value={customer.dni}
-                  onChange={(event) => updateCustomer('dni', event.target.value)}
-                  aria-invalid={Boolean(errors.dni)}
-                  aria-describedby={errors.dni ? 'customer-dni-error' : undefined}
-                  placeholder="Sin puntos, 7 u 8 números"
-                />
-              </Field>
-
               <Field id="customer-phone" label="WhatsApp / teléfono" error={errors.phone}>
                 <input
                   id="customer-phone"
@@ -378,7 +362,7 @@ export function CartDrawer({
                 />
                 <span>
                   Entiendo que NyS usará estos datos solo para gestionar este pedido.
-                  El DNI queda visible únicamente para la administración de la tienda.
+                  Tu número de WhatsApp se usará únicamente para coordinar la entrega.
                 </span>
               </label>
               {errors.privacy && <p className="field-error">{errors.privacy}</p>}

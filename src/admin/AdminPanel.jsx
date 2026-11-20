@@ -136,7 +136,6 @@ export function AdminPanel({ session, isDemo, onLogout }) {
         if (!query) return true;
         return normalizeText([
           order.customer_name,
-          order.customer_dni,
           order.customer_phone,
           order.id,
         ].join(' ')).includes(query);
@@ -400,7 +399,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                   type="search"
                   value={orderQuery}
                   onChange={(event) => setOrderQuery(event.target.value)}
-                  placeholder="Nombre, DNI o pedido…"
+                  placeholder="Nombre o pedido…"
                 />
               </label>
             </div>
@@ -469,7 +468,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                       <div className="order-card-body">
                         <div className="order-customer">
                           <h3>{order.customer_name}</h3>
-                          <p>DNI {order.customer_dni} · {order.customer_phone}</p>
+                          <p>{order.customer_phone}</p>
                           {order.delivery_notes && <p className="order-note">Entrega: {order.delivery_notes}</p>}
                         </div>
 

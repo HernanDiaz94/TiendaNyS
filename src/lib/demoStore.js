@@ -177,7 +177,6 @@ export function createDemoOrder({ customer, items }) {
   const order = {
     id: makeId(),
     customer_name: String(customer?.name || '').trim(),
-    customer_dni: String(customer?.dni || '').replace(/\D/g, ''),
     customer_phone: String(customer?.phone || '').trim(),
     delivery_notes: String(customer?.notes || '').trim().slice(0, 300),
     status: 'pendiente',

@@ -27,7 +27,7 @@ create table if not exists public.profiles (
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   customer_name text not null check (char_length(customer_name) between 2 and 100),
-  customer_dni text not null check (customer_dni ~ '^[0-9]{7,8}$'),
+  customer_dni text check (customer_dni is null or customer_dni ~ '^[0-9]{7,8}$'),
   customer_phone text not null check (char_length(customer_phone) between 8 and 30 and customer_phone ~ '^[+0-9 ().-]+$' and char_length(regexp_replace(customer_phone, '[^0-9]', '', 'g')) between 8 and 15),
   delivery_notes text not null default '' check (char_length(delivery_notes) <= 300),
   status text not null default 'pendiente' check (status in ('pendiente', 'confirmado', 'preparando', 'listo', 'entregado', 'cancelado')),
@@ -119,7 +119,6 @@ grant select on public.order_items to authenticated;
 -- y bloquea filas de stock para evitar sobreventa. Nunca confía en el precio del navegador.
 create or replace function public.place_order(
   p_customer_name text,
-  p_customer_dni text,
   p_customer_phone text,
   p_delivery_notes text,
   p_items jsonb
@@ -144,9 +143,6 @@ begin
   if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ '[<>[:cntrl:]]' then
     raise exception 'INVALID_CUSTOMER_NAME';
   end if;
-  if p_customer_dni is null or p_customer_dni !~ '^[0-9]{7,8}$' then
-    raise exception 'INVALID_DNI';
-  end if;
   if p_customer_phone is null or char_length(btrim(p_customer_phone)) < 8 or char_length(btrim(p_customer_phone)) > 30
      or btrim(p_customer_phone) !~ '^[+0-9 ().-]+$'
      or char_length(regexp_replace(btrim(p_customer_phone), '[^0-9]', '', 'g')) not between 8 and 15 then
@@ -159,8 +155,8 @@ begin
     raise exception 'INVALID_ITEMS';
   end if;
 
-  insert into public.orders (customer_name, customer_dni, customer_phone, delivery_notes, status, total)
-  values (btrim(p_customer_name), p_customer_dni, btrim(p_customer_phone), coalesce(btrim(p_delivery_notes), ''), 'pendiente', 0)
+  insert into public.orders (customer_name, customer_phone, delivery_notes, status, total)
+  values (btrim(p_customer_name), btrim(p_customer_phone), coalesce(btrim(p_delivery_notes), ''), 'pendiente', 0)
   returning id into v_order_id;
 
   for v_item in select value from jsonb_array_elements(p_items)

@@ -68,7 +68,7 @@ export const demoProducts = [
     description: 'Tiro alto y caída fluida. Un básico que combina con todo.',
     price: 45900,
     stock: 2,
-    image_url: 'https://images.unsplash.com/photo-1506629905607-d9b8c5cbb5d7?auto=format&fit=crop&w=1000&q=85',
+    image_url: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=1000&q=85',
     sizes: ['S', 'M', 'L'],
     color: 'Negro',
     featured: false,

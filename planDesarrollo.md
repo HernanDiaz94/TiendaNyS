@@ -154,6 +154,9 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 | Commit | Descripción |
 |--------|-------------|
+| `ef726da` | feat: registro de compras con stock, fecha de ingreso y alerta de inventario +6 meses |
+| `79251d1` | fix: import directo de AdminApp (el panel no cargaba con lazy import) |
+| `17fce97` | feat: quitar DNI del checkout y detallar productos en el mensaje de WhatsApp |
 | `e5bb260` | fix: update vercel.json rewrite destination to /index.html |
 | `5876354` | feat: add vercel.json for SPA routing (admin route) |
 | `b3ca597` | fix: replace Pantalon Nube image with another working Unsplash URL |

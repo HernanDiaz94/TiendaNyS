@@ -1,8 +1,8 @@
 import { ArrowUpRight, Instagram } from 'lucide-react';
 import { ProductImage } from './ui.jsx';
 
-const STORY_MAIN = 'https://images.unsplash.com/photo-1576043635022-423d5d578d7f?auto=format&fit=crop&w=1200&q=85';
-const STORY_DETAIL = 'https://images.unsplash.com/photo-1556813353aca5?auto=format&fit=crop&w=700&q=85';
+const STORY_MAIN = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85';
+const STORY_DETAIL = 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=700&q=85';
 
 export function Story({ instagramUrl, handle }) {
   return (

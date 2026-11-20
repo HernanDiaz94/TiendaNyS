@@ -103,24 +103,26 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado).
 
 ---
 
-## 🖼️ Imágenes de Productos (Unsplash)
+## 🖼️ Imágenes de Productos (Pexels)
 
-Todas las URLs verificadas (200 OK):
+Fotos de tonos tierra, lana y cuero, con estética del noroeste argentino. URLs verificadas (200 OK):
 
-| # | Producto | URL Unsplash |
-|---|----------|-------------|
-| 1 | Campera Siena | photo-1548126032-079a0fb0099d |
-| 2 | Remera Esencial | photo-1521572163474-6864f9cf17ab |
-| 3 | Mochila Urbana | photo-1553062407-98eeb64c6a62 |
-| 4 | Zapatillas Alba | photo-1542291026-7eec264c27ff |
-| 5 | Pantalón Nube | photo-1541099649105-f69ad21f3246 |
-| 6 | Buzo Monte | photo-1556821840-3a63f95609a7 |
-| 7 | Gorra Brisa | photo-1588850561407-ed78c282e89b |
-| 8 | Sandalias Costa | photo-1603487742131-4160ec999306 |
-| 9 | Camisa Oliva | photo-1598033129183-c4f50c736f10 |
-| 10 | Tote Mercado | photo-1590874103328-eac38a683ce7 |
-| 11 | Botitas Sur | photo-1543163521-1bf539c55dd2 |
-| 12 | Chaleco Clara | photo-1591047139829-d91aecb6caea |
+| # | Producto | Foto Pexels | Contenido |
+|---|----------|-------------|-----------|
+| 1 | Campera Siena | 14330778 | Abrigo beige en escaleras |
+| 2 | Remera Esencial | 6786614 | Remera blanca sobre fondo crudo |
+| 3 | Mochila Urbana | 9629915 | Mochila en sendero verde |
+| 4 | Zapatillas Alba | 16216558 | Zapatillas sobre piso de terracota |
+| 5 | Pantalón Nube | 14200504 | Look negro sobre dunas |
+| 6 | Buzo Monte | 5789010 | Suéter de lana tostada |
+| 7 | Gorra Brisa | 7562957 | Gorra cruda sobre madera |
+| 8 | Sandalias Costa | 23692992 | Sandalias de cuero |
+| 9 | Camisa Oliva | 17476810 | Camisa oliva |
+| 10 | Tote Mercado | 17836626 | Tote de lona y cuero |
+| 11 | Botitas Sur | 19750710 | Botas de cuero marrón |
+| 12 | Chaleco Clara | 9904108 | Chaleco de lana crema |
+
+> Los datos demo ya guardados en `localStorage` se migran solos: `demoStore.js` reemplaza las URLs viejas de Unsplash para estos 12 artículos al cargar el catálogo.
 
 ### Imágenes de Hero/Story
 
@@ -134,7 +136,7 @@ Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
 | Story (detalle) | pexels-21558539 | Ruta entre cerros rojos de Fiambalá |
 | `og:image` | pexels-37610517 | Laguna y picos nevados |
 
-> **Punto de retorno:** tag `punto-retorno-imagenes` (commit `3af4321`). Para volver a las fotos anteriores: `git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx index.html src/styles.css`.
+> **Punto de retorno:** tag `punto-retorno-imagenes` (commit `3af4321`). Para volver a todas las fotos anteriores: `git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx src/data/demoProducts.js src/lib/demoStore.js index.html src/styles.css`.
 
 ---
 

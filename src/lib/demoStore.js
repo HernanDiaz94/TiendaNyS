@@ -51,9 +51,21 @@ function seedProducts() {
   }));
 }
 
+// Migración: reemplaza las fotos viejas de Unsplash guardadas en localStorage
+// por las nuevas fotos de la semilla, sin tocar stock, pedidos ni compras.
+const SEED_IMAGES = new Map(
+  demoProducts.map((product) => [String(product.id), product.image_url]),
+);
+
 function withInventoryDefaults(product) {
+  const seedImage = SEED_IMAGES.get(String(product.id));
+  const imageUrl = seedImage && String(product.image_url || '').includes('images.unsplash.com')
+    ? seedImage
+    : product.image_url;
+
   return {
     ...product,
+    image_url: imageUrl,
     purchased_at: product.purchased_at || product.created_at || new Date().toISOString(),
   };
 }
@@ -63,7 +75,13 @@ export function readDemoProducts() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.map(withInventoryDefaults);
+      if (Array.isArray(parsed)) {
+        const normalized = parsed.map(withInventoryDefaults);
+        if (normalized.some((product, index) => product.image_url !== parsed[index].image_url)) {
+          writeDemoProducts(normalized);
+        }
+        return normalized;
+      }
     } catch {
       /* fall back to the seed */
     }

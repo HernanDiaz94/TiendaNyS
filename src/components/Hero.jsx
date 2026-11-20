@@ -23,7 +23,7 @@ export function Hero({ whatsappUrl, instagramUrl }) {
           </p>
 
           <h1 className="hero-title">
-            Básicos<br />
+            Simples<br />
             con <em>actitud.</em>
           </h1>
 

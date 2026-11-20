@@ -1,9 +1,9 @@
 import { ArrowDownRight, ArrowRight, MapPin, Package, ShieldCheck } from 'lucide-react';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
-// Paisajes de Catamarca, Argentina (fotografías libres de Pexels).
-const HERO_IMAGE = 'https://images.pexels.com/photos/21050227/pexels-photo-21050227.jpeg?auto=compress&cs=tinysrgb&w=1400';
-const HERO_DETAIL = 'https://images.pexels.com/photos/38073016/pexels-photo-38073016.jpeg?auto=compress&cs=tinysrgb&w=800';
+// Paisajes del valle catamarqueño / Valle Chico (Pexels y Wikimedia Commons, dominio público).
+const HERO_IMAGE = 'https://images.pexels.com/photos/22866129/pexels-photo-22866129.jpeg?auto=compress&cs=tinysrgb&w=1400';
+const HERO_DETAIL = 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Vista_a%C3%A9rea_de_San_Fernando_del_Valle_de_Catamarca%2C_Argentina.jpg';
 
 const MARQUEE_ITEMS = [
   'N&S INDUMENTARIA',
@@ -68,14 +68,14 @@ export function Hero({ whatsappUrl, instagramUrl }) {
           <figure className="hero-main">
             <ProductImage
               src={HERO_IMAGE}
-              alt="Capilla de adobe al pie de los cerros de Catamarca, Argentina"
+              alt="Camino de tierra hacia los cerros del valle catamarqueño, Valle Chico"
               eager
             />
           </figure>
           <figure className="hero-detail">
             <ProductImage
               src={HERO_DETAIL}
-              alt="Formaciones rocosas del paisaje catamarqueño"
+              alt="Vista aérea de San Fernando del Valle de Catamarca, Argentina"
               eager
             />
           </figure>

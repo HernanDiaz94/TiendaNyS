@@ -130,11 +130,13 @@ Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
 
 | Componente | Foto | Descripción |
 |-----------|------|-------------|
-| Hero (principal) | pexels-21050227 | Capilla de adobe al pie de los cerros |
-| Hero (detalle) | pexels-38073016 | Formaciones rocosas catamarqueñas |
+| Hero (principal) | pexels-22866129 | Camino rural del valle catamarqueño (Valle Chico) |
+| Hero (detalle) | Wikimedia Commons · *Vista aérea de San Fernando del Valle de Catamarca* (dominio público) | Vista aérea del valle |
 | Story (principal) | pexels-31204629 | Valle y cerros de los Andes |
 | Story (detalle) | pexels-21558539 | Ruta entre cerros rojos de Fiambalá |
 | `og:image` | pexels-37610517 | Laguna y picos nevados |
+
+> No hay fotos libres etiquetadas específicamente como "Valle Chico". Las del hero son del valle catamarqueño y una vista aérea de San Fernando del Valle (la ciudad donde está Valle Chico). Si el local tiene fotos propias, se pueden reemplazar por esas.
 
 > **Punto de retorno:** tag `punto-retorno-imagenes` (commit `3af4321`). Para volver a todas las fotos anteriores: `git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx src/data/demoProducts.js src/lib/demoStore.js index.html src/styles.css`.
 

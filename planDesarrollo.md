@@ -197,6 +197,9 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 ### 🔜 Próximos pasos a implementar (prioridad alta)
 - [ ] **Mejorar formulario de la bolsa de pedido:** Eliminar campo DNI, solo pedir Nombre y Número de WhatsApp
 - [ ] **Detalle de productos en mensaje de WhatsApp:** El mensaje debe incluir información detallada de cada producto (nombre, talle, cantidad, precio unitario y subtotal)
+- [ ] **Control de compra de productos en admin:** Registrar compras de productos vinculadas al stock (cantidad comprada, proveedor, costo)
+- [ ] **Fecha de compra de producto:** Almacenar fecha de ingreso/compra de cada lote de producto
+- [ ] **Alerta de inventario antiguo:** Aviso o alerta para productos con más de 6 meses en el inventario (basado en fecha de compra/ingreso)
 
 ### Otras mejoras
 - [ ] Conectar Supabase para persistencia real de datos

@@ -1,15 +1,5 @@
-import { lazy, Suspense } from 'react';
 import { Storefront } from './components/Storefront.jsx';
-
-const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
-
-function AdminFallback() {
-  return (
-    <main className="auth-loading" aria-busy="true">
-      <p>Cargando panel…</p>
-    </main>
-  );
-}
+import AdminApp from './admin/AdminApp.jsx';
 
 export default function App() {
   const path = window.location.pathname;
@@ -18,8 +8,6 @@ export default function App() {
   if (!isAdminPath) return <Storefront />;
 
   return (
-    <Suspense fallback={<AdminFallback />}>
-      <AdminApp />
-    </Suspense>
+    <AdminApp />
   );
 }

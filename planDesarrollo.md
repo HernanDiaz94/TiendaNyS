@@ -111,8 +111,8 @@ Fotos de tonos tierra, lana y cuero, con estética del noroeste argentino. URLs 
 |---|----------|-------------|-----------|
 | 1 | Campera Siena | 14330778 | Abrigo beige en escaleras |
 | 2 | Remera Esencial | 6786614 | Remera blanca sobre fondo crudo |
-| 3 | Mochila Urbana | 9629915 | Mochila en sendero verde |
-| 4 | Zapatillas Alba | 16216558 | Zapatillas sobre piso de terracota |
+| 3 | Mochila Urbana | 12477384 | Mochilero en ruta de cerros secos |
+| 4 | Zapatillas Alba | 33353887 | Zapatilla sobre dunas de arena |
 | 5 | Pantalón Nube | 14200504 | Look negro sobre dunas |
 | 6 | Buzo Monte | 5789010 | Suéter de lana tostada |
 | 7 | Gorra Brisa | 7562957 | Gorra cruda sobre madera |

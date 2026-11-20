@@ -57,11 +57,22 @@ const SEED_IMAGES = new Map(
   demoProducts.map((product) => [String(product.id), product.image_url]),
 );
 
+// Fotos reemplazadas después del primer cambio de imágenes.
+const REPLACED_IMAGE_IDS = new Map([
+  ['nys-003', '9629915'],
+  ['nys-004', '16216558'],
+]);
+
 function withInventoryDefaults(product) {
-  const seedImage = SEED_IMAGES.get(String(product.id));
-  const imageUrl = seedImage && String(product.image_url || '').includes('images.unsplash.com')
-    ? seedImage
-    : product.image_url;
+  const id = String(product.id);
+  const seedImage = SEED_IMAGES.get(id);
+  const currentImage = String(product.image_url || '');
+  const replacedId = REPLACED_IMAGE_IDS.get(id);
+  const mustMigrate = Boolean(
+    (seedImage && currentImage.includes('images.unsplash.com'))
+    || (replacedId && currentImage.includes(`/photos/${replacedId}/`)),
+  );
+  const imageUrl = mustMigrate ? seedImage : product.image_url;
 
   return {
     ...product,

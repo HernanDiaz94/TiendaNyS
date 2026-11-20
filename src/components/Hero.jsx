@@ -1,8 +1,8 @@
 import { ArrowDownRight, ArrowRight, MapPin, Package, ShieldCheck } from 'lucide-react';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
-// Paisajes del valle catamarqueño / Valle Chico (Pexels y Wikimedia Commons, dominio público).
-const HERO_IMAGE = 'https://images.pexels.com/photos/22866129/pexels-photo-22866129.jpeg?auto=compress&cs=tinysrgb&w=1400';
+// Valle Chico, San Fernando del Valle de Catamarca (foto: Catamarca RT).
+const HERO_IMAGE = 'https://catamarcartv.com/wp-content/uploads/2024/12/IMG_5197-scaled.jpeg';
 const HERO_DETAIL = 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Vista_a%C3%A9rea_de_San_Fernando_del_Valle_de_Catamarca%2C_Argentina.jpg';
 
 const MARQUEE_ITEMS = [
@@ -68,7 +68,7 @@ export function Hero({ whatsappUrl, instagramUrl }) {
           <figure className="hero-main">
             <ProductImage
               src={HERO_IMAGE}
-              alt="Camino de tierra hacia los cerros del valle catamarqueño, Valle Chico"
+              alt="Valle Chico, San Fernando del Valle de Catamarca, Argentina"
               eager
             />
           </figure>

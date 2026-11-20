@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+.build/
+
+# Environment variables
+.env.local
+.env.*.local
+.env
+.env.example
+
+# Logs
+logs/
+*.log
+
+# Runtime temp
+temp/
+tmp/
+
+# Coverage reports
+coverage/
+
+# vitest
+.vitest/
+
+# Local storage db
+dist/**
+
+# Package artifacts
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Storybook CI
+storybook-static/

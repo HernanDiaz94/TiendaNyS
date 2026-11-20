@@ -1,4 +1,4 @@
-import { ArrowUpRight, Instagram } from 'lucide-react';
+import { ArrowUpRight, Instagram, MapPin } from 'lucide-react';
 import { WhatsAppIcon } from './ui.jsx';
 import { SITE } from '../config/site.js';
 
@@ -39,7 +39,9 @@ export function Footer({ instagramUrl, whatsappUrl, handle }) {
           © {new Date().getFullYear()} NyS Indumentaria · Hecho con cariño en Catamarca
         </p>
         <div className="foot-addr">
-          <span>{SITE.direccion}</span>
+          <span className="foot-addr-line">
+            <MapPin size={13} aria-hidden="true" /> {SITE.direccion}
+          </span>
           <span>{SITE.horarios}</span>
         </div>
       </div>

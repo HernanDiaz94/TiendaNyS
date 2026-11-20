@@ -1634,6 +1634,17 @@ a {
   display: block;
 }
 
+.foot-addr .foot-addr-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.foot-addr .foot-addr-line svg {
+  flex: none;
+  color: var(--accent);
+}
+
 .foot-addr span + span {
   color: rgba(255, 255, 255, 0.42);
 }

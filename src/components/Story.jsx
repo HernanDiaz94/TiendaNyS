@@ -1,8 +1,9 @@
 import { ArrowUpRight, Instagram } from 'lucide-react';
 import { ProductImage } from './ui.jsx';
 
-const STORY_MAIN = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85';
-const STORY_DETAIL = 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=700&q=85';
+// Paisajes de Catamarca, Argentina (fotografías libres de Pexels).
+const STORY_MAIN = 'https://images.pexels.com/photos/31204629/pexels-photo-31204629.jpeg?auto=compress&cs=tinysrgb&w=1400';
+const STORY_DETAIL = 'https://images.pexels.com/photos/21558539/pexels-photo-21558539.jpeg?auto=compress&cs=tinysrgb&w=800';
 
 export function Story({ instagramUrl, handle }) {
   return (
@@ -10,10 +11,16 @@ export function Story({ instagramUrl, handle }) {
       <div className="story-grid">
         <div className="story-media">
           <figure className="story-main">
-            <ProductImage src={STORY_MAIN} alt="Perchero con prendas de la colección NyS" />
+            <ProductImage
+              src={STORY_MAIN}
+              alt="Valle y cerros de los Andes en Catamarca, Argentina"
+            />
           </figure>
           <figure className="story-detail">
-            <ProductImage src={STORY_DETAIL} alt="Detalle de zapatillas de la colección" />
+            <ProductImage
+              src={STORY_DETAIL}
+              alt="Ruta entre cerros rojos de Fiambalá, Catamarca"
+            />
           </figure>
           <span className="story-stamp" aria-hidden="true">CTA<br />EST. 2025</span>
         </div>

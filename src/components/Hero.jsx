@@ -1,8 +1,9 @@
 import { ArrowDownRight, ArrowRight, MapPin, Package, ShieldCheck } from 'lucide-react';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=88';
-const HERO_DETAIL = 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=85';
+// Paisajes de Catamarca, Argentina (fotografías libres de Pexels).
+const HERO_IMAGE = 'https://images.pexels.com/photos/21050227/pexels-photo-21050227.jpeg?auto=compress&cs=tinysrgb&w=1400';
+const HERO_DETAIL = 'https://images.pexels.com/photos/38073016/pexels-photo-38073016.jpeg?auto=compress&cs=tinysrgb&w=800';
 
 const MARQUEE_ITEMS = [
   'N&S INDUMENTARIA',
@@ -65,10 +66,18 @@ export function Hero({ whatsappUrl, instagramUrl }) {
 
         <div className="hero-visual">
           <figure className="hero-main">
-            <ProductImage src={HERO_IMAGE} alt="Selección de prendas de NyS Indumentaria" eager />
+            <ProductImage
+              src={HERO_IMAGE}
+              alt="Capilla de adobe al pie de los cerros de Catamarca, Argentina"
+              eager
+            />
           </figure>
           <figure className="hero-detail">
-            <ProductImage src={HERO_DETAIL} alt="Detalle de texturas y prendas" eager />
+            <ProductImage
+              src={HERO_DETAIL}
+              alt="Formaciones rocosas del paisaje catamarqueño"
+              eager
+            />
           </figure>
           <div className="hero-sticker" aria-hidden="true">
             <span>DROP</span>
@@ -76,7 +85,7 @@ export function Hero({ whatsappUrl, instagramUrl }) {
             <small>2026</small>
           </div>
           <a className="hero-coord" href="#coleccion">
-            34°36′S · 58°22′W <ArrowDownRight size={13} aria-hidden="true" />
+            28°28′S · 65°47′W <ArrowDownRight size={13} aria-hidden="true" />
           </a>
         </div>
       </section>

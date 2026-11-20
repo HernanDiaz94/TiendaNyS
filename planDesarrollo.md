@@ -124,12 +124,17 @@ Todas las URLs verificadas (200 OK):
 
 ### Imágenes de Hero/Story
 
-| Componente | URL Unsplash |
-|-----------|-------------|
-| Hero (principal) | photo-1441986300917-64674bd600d8 |
-| Hero (detalle) | photo-1556905055-8f358a7a47b2 |
-| Story (principal) | photo-1515886657613-9f3515b0c78f |
-| Story (detalle) | photo-1503342217505-b0a15ec3261c |
+Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
+
+| Componente | Foto | Descripción |
+|-----------|------|-------------|
+| Hero (principal) | pexels-21050227 | Capilla de adobe al pie de los cerros |
+| Hero (detalle) | pexels-38073016 | Formaciones rocosas catamarqueñas |
+| Story (principal) | pexels-31204629 | Valle y cerros de los Andes |
+| Story (detalle) | pexels-21558539 | Ruta entre cerros rojos de Fiambalá |
+| `og:image` | pexels-37610517 | Laguna y picos nevados |
+
+> **Punto de retorno:** tag `punto-retorno-imagenes` (commit `3af4321`). Para volver a las fotos anteriores: `git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx index.html src/styles.css`.
 
 ---
 

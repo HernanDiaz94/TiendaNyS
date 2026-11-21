@@ -169,7 +169,9 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 **Proyecto:** ref `asqfokknkuciricvbpyn` · https://supabase.com/dashboard/project/asqfokknkuciricvbpyn
 
-La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` están definidos, deja de usar `localStorage` y pasa a leer/escribir en la base (`isSupabaseConfigured` en `src/lib/supabase.js`). Si se borran las variables, vuelve al modo demo.
+La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` (o la legacy `VITE_SUPABASE_ANON_KEY`) están definidos, deja de usar `localStorage` y pasa a leer/escribir en la base (`isSupabaseConfigured` en `src/lib/supabase.js`). Si se borran las variables, vuelve al modo demo.
+
+**Estado: conectado y deployado el 21/11/2026.** El esquema se ejecutó con éxito, el catálogo responde 12 productos desde `rest/v1/products` y Vercel tiene las dos variables en Production, Preview y Development. `.env` dejó de versionarse (commit `64487bd`). Falta únicamente crear el usuario admin desde el dashboard para acceder a `/admin`.
 
 **Pasos para dejarlo andando:**
 
@@ -201,6 +203,9 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `64487bd` | chore: dejar de versionar `.env` |
+| `85a30e9` | fix: corregir también el `GRANT` de `place_order` en `schema.sql` |
+| `4e52b7d` | fix: corregir esquema SQL y semilla de fotos para Supabase |
 | `d450646` | feat: imagen Drop 01 2026 como foto principal del hero |
 | `4d18cf1` | fix: quitar aviso de modo demostración en el login |
 | `543d4f0` | feat: registro de administradores con correo en modo demo |
@@ -326,7 +331,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [x] **Alerta de inventario antiguo:** Aviso para productos con más de 6 meses en inventario
 
 ### Otras mejoras
-- [ ] Conectar Supabase para persistencia real de datos
+- [x] Conectar Supabase para persistencia real de datos (21/11/2026)
 - [ ] Agregar más productos al catálogo
 - [ ] Configurar MercadoPago para pagos online
 - [ ] Agregar más categorías de productos
@@ -378,9 +383,10 @@ git push origin --tags            # Subir tags a GitHub
 
 ## ✅ Estado actual (21 de Noviembre, 2026)
 
-- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con foto real de Valle Chico, footer con ícono de ubicación, login con registro de admins demo y sin aviso de demostración.
+- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026**, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador).
+- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Falta crear el usuario admin desde Authentication → Users y asignarle `role = 'admin'`.
 - **Tests:** 32/32 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
-- Repositorio limpio, sin cambios pendientes.
+- Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
 
 *Documento actualizado manualmente. Última actualización: 21 de Noviembre, 2026*

@@ -215,7 +215,7 @@ begin
 end;
 $$;
 revoke all on function public.place_order(text, text, text, jsonb) from public, authenticated;
-grant execute on function public.place_order(text, text, text, text, jsonb) to anon, authenticated;
+grant execute on function public.place_order(text, text, text, jsonb) to anon, authenticated;
 
 -- Cambiar el estado desde el panel con control de permisos y devolución de stock al cancelar.
 create or replace function public.admin_update_order_status(p_order_id uuid, p_status text)

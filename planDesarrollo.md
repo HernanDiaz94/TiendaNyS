@@ -163,7 +163,7 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 | `VITE_INSTAGRAM_HANDLE` | `nys_indumentaria_25` |
 | `VITE_DEMO_ADMIN_PASSWORD` | `nys-demo` |
 | `VITE_SUPABASE_URL` | `https://asqfokknkuciricvbpyn.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | (anon/public key del proyecto — **nunca** `service_role`) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | publishable key (`sb_publishable_...`). También se acepta `VITE_SUPABASE_ANON_KEY` legacy — **nunca** `service_role` |
 
 ### Conexión a Supabase (proyecto creado el 21/11/2026)
 
@@ -181,18 +181,18 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
    select id, 'admin' from auth.users where email = 'TU_EMAIL@gmail.com'
    on conflict (user_id) do update set role = 'admin';
    ```
-4. Copiar la **Project URL** y la **anon key** (Dashboard → Project Settings → API) en `.env` local:
+4. Copiar la **Project URL** y la **publishable key** (botón **Connect** del dashboard, o Project Settings → API Keys) en `.env` local:
    ```
    VITE_SUPABASE_URL=https://asqfokknkuciricvbpyn.supabase.co
-   VITE_SUPABASE_ANON_KEY=...
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
    ```
 5. Cargar las mismas dos variables en **Vercel → Settings → Environment Variables** (Production, Preview y Development) y hacer un redeploy (`vercel --prod --name tienda-nys`).
 6. Probar en `/admin`: iniciar sesión con el **correo y contraseña** del usuario creado (en modo Supabase ya no aplica el usuario `admin` / clave `nys-demo`).
 
-> Seguridad: la anon key es pública y está protegida por RLS. La `service_role` **nunca** se pone en variables `VITE_*` ni en el frontend.
+> Seguridad: la publishable key (o la anon legacy) es pública y está protegida por RLS. La `service_role` / secret key **nunca** se pone en variables `VITE_*` ni en el frontend.
 
 **Correcciones aplicadas al esquema antes de ejecutarlo:**
-- Fijado el `REVOKE` de `place_order` (tenía 5 argumentos en la firma; la función tiene 4). Sin esto, el SQL se cortaba antes de crear el bucket de imágenes y `register_purchase`.
+- Fijadas las firmas de `REVOKE` **y** `GRANT` de `place_order` (tenían 5 argumentos; la función tiene 4). Sin esto, el SQL se cortaba con `42883: function public.place_order(text, text, text, text, jsonb) does not exist` antes de crear el bucket de imágenes y `register_purchase`.
 - Semilla actualizada a las 12 fotos finales de Pexels y con `purchased_at` para conservar la alerta de +6 meses en los dos artículos viejos.
 
 ---

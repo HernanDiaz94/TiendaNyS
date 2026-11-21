@@ -21,7 +21,7 @@ export default function AdminApp() {
   }
 
   if (!auth.session) {
-    return <AdminLogin onLogin={auth.signIn} isDemo={auth.isDemo} />;
+    return <AdminLogin onLogin={auth.signIn} onSignUp={auth.signUp} isDemo={auth.isDemo} />;
   }
 
   return (

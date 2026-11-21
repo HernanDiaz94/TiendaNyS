@@ -2,8 +2,37 @@ import { useCallback, useEffect, useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 const DEMO_SESSION_KEY = 'nys-demo-session';
+const DEMO_USERS_KEY = 'nys-demo-users';
 export const DEMO_PASSWORD = import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'nys-demo';
 export const DEMO_USERNAME = import.meta.env.VITE_DEMO_ADMIN_USERNAME || 'admin';
+
+// Solo demo: las contraseñas se guardan hasheadas de forma simple para no dejarlas
+// en texto plano en localStorage. Esto NO reemplaza a Supabase Auth en producción.
+function hashPassword(value) {
+  let hash = 5381;
+  const text = String(value || '');
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) + hash + text.charCodeAt(i)) | 0;
+  }
+  return `demo-${hash}`;
+}
+
+function readJson(key, fallback) {
+  try {
+    const raw = window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* almacenamiento no disponible: la sesión en memoria sigue funcionando */
+  }
+}
 
 function readDemoSession() {
   try {
@@ -12,6 +41,11 @@ function readDemoSession() {
   } catch {
     return null;
   }
+}
+
+function readDemoUsers() {
+  const users = readJson(DEMO_USERS_KEY, []);
+  return Array.isArray(users) ? users : [];
 }
 
 export function useAuth() {
@@ -43,29 +77,48 @@ export function useAuth() {
     };
   }, [isDemo]);
 
-  const signIn = useCallback(async ({ username, password }) => {
+  const signIn = useCallback(async ({ identifier, username, email, password }) => {
+    const value = String(identifier || email || username || '').trim();
+    const looksLikeEmail = value.includes('@');
+
     if (isDemo) {
+      if (looksLikeEmail) {
+        const normalized = value.toLowerCase();
+        const user = readDemoUsers().find((item) => String(item.email).toLowerCase() === normalized);
+        if (!user) {
+          throw new Error('No hay ningún administrador registrado con ese correo.');
+        }
+        if (hashPassword(password) !== user.password_hash) {
+          throw new Error('La contraseña no es correcta.');
+        }
+        const demoSession = { demo: true, user: { email: user.email } };
+        try {
+          window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoSession));
+        } catch {
+          /* la sesión sigue funcionando para este render */
+        }
+        setSession(demoSession);
+        return demoSession;
+      }
+
       if (String(password) !== DEMO_PASSWORD) {
         throw new Error('La contraseña de demostración no es correcta.');
       }
-      if (String(username).trim() !== DEMO_USERNAME) {
+      if (value !== DEMO_USERNAME) {
         throw new Error('El nombre de usuario no es correcto.');
       }
-      const demoSession = {
-        demo: true,
-        user: { username: String(username).trim() },
-      };
+      const demoSession = { demo: true, user: { username: value } };
       try {
         window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoSession));
       } catch {
-        /* the session still works for this render */
+        /* la sesión sigue funcionando para este render */
       }
       setSession(demoSession);
       return demoSession;
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: String(email || '').trim(),
+      email: value,
       password,
     });
     if (error) {
@@ -75,6 +128,42 @@ export function useAuth() {
     }
     setSession(data.session);
     return data.session;
+  }, [isDemo]);
+
+  const signUp = useCallback(async ({ email, password }) => {
+    if (!isDemo) {
+      throw new Error('El registro de usuarios solo está disponible en modo demostración.');
+    }
+
+    const normalized = String(email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      throw new Error('Ingresá un correo electrónico válido (por ejemplo tu@gmail.com).');
+    }
+    if (String(password || '').length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres.');
+    }
+
+    const users = readDemoUsers();
+    if (users.some((item) => String(item.email).toLowerCase() === normalized)) {
+      throw new Error('Ya existe un administrador registrado con ese correo.');
+    }
+
+    const user = {
+      email: normalized,
+      password_hash: hashPassword(password),
+      role: 'admin',
+      created_at: new Date().toISOString(),
+    };
+    writeJson(DEMO_USERS_KEY, [...users, user]);
+
+    const demoSession = { demo: true, user: { email: user.email } };
+    try {
+      window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoSession));
+    } catch {
+      /* la sesión sigue funcionando para este render */
+    }
+    setSession(demoSession);
+    return demoSession;
   }, [isDemo]);
 
   const signOut = useCallback(async () => {
@@ -91,5 +180,5 @@ export function useAuth() {
     setSession(null);
   }, [isDemo]);
 
-  return { session, ready, isDemo, signIn, signOut };
+  return { session, ready, isDemo, signIn, signUp, signOut };
 }

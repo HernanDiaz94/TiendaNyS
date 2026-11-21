@@ -5,27 +5,47 @@ import {
   Eye,
   EyeOff,
   LockKeyhole,
+  Mail,
   ShieldCheck,
   ShoppingBag,
+  UserPlus,
 } from 'lucide-react';
 import { DEMO_PASSWORD } from '../hooks/useAuth.js';
 import { ErrorNote, Notice, Spinner } from '../components/ui.jsx';
 
-export function AdminLogin({ onLogin, isDemo }) {
-  const [username, setUsername] = useState('');
+export function AdminLogin({ onLogin, onSignUp, isDemo }) {
+  const [mode, setMode] = useState('login');
+  const [identifier, setIdentifier] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const switchMode = (next) => {
+    setMode(next);
+    setError('');
+    setPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+  };
 
   const submit = async (event) => {
     event.preventDefault();
     setBusy(true);
     setError('');
     try {
-      await onLogin({ username, password });
+      if (mode === 'register') {
+        if (password !== confirmPassword) {
+          throw new Error('Las contraseñas no coinciden.');
+        }
+        await onSignUp({ email, password });
+      } else {
+        await onLogin({ identifier, password });
+      }
     } catch (loginError) {
-      setError(loginError.message || 'No pudimos iniciar sesión.');
+      setError(loginError.message || 'No pudimos completar la operación.');
     } finally {
       setBusy(false);
     }
@@ -62,32 +82,82 @@ export function AdminLogin({ onLogin, isDemo }) {
             <small>INDUMENTARIA</small>
           </a>
 
-          <p className="eyebrow">PANEL PRIVADO</p>
-          <h2>Hola de nuevo.</h2>
-          <p className="login-lede">Ingresá con la cuenta de administración de la tienda.</p>
+          <div className="auth-tabs" role="tablist" aria-label="Acceso al panel">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'login'}
+              className={mode === 'login' ? 'auth-tab is-active' : 'auth-tab'}
+              onClick={() => switchMode('login')}
+            >
+              Ingresar
+            </button>
+            {isDemo && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'register'}
+                className={mode === 'register' ? 'auth-tab is-active' : 'auth-tab'}
+                onClick={() => switchMode('register')}
+              >
+                <UserPlus size={14} aria-hidden="true" /> Registrar admin
+              </button>
+            )}
+          </div>
 
-          {isDemo && (
+          <p className="eyebrow">{mode === 'login' ? 'PANEL PRIVADO' : 'NUEVO ADMINISTRADOR'}</p>
+          <h2>{mode === 'login' ? 'Hola de nuevo.' : 'Crear cuenta.'}</h2>
+          <p className="login-lede">
+            {mode === 'login'
+              ? 'Ingresá con tu correo registrado o con el usuario de la tienda.'
+              : 'Registrá un correo (puede ser Gmail) para dar acceso al panel.'}
+          </p>
+
+          {isDemo && mode === 'login' && (
             <Notice tone="info">
-              <strong>Modo demostración.</strong> No hay Supabase conectado. Entrá con
-              el nombre de usuario <strong>admin</strong> y la contraseña <code>{DEMO_PASSWORD}</code>. Los cambios
-              quedan solo en este navegador.
+              <strong>Modo demostración.</strong> Entrá con <strong>admin</strong> / <code>{DEMO_PASSWORD}</code>,
+              o con un correo registrado desde la pestaña <strong>Registrar admin</strong>. Los cambios quedan solo en este navegador.
+            </Notice>
+          )}
+
+          {isDemo && mode === 'register' && (
+            <Notice tone="info">
+              <strong>Solo demostración.</strong> La cuenta se guarda en este navegador y tiene acceso de administrador.
+              Para producción se usa Supabase Auth con rol admin.
             </Notice>
           )}
 
           <form className="auth-form" onSubmit={submit} noValidate>
-            <div className="field">
-              <label htmlFor="admin-username">Nombre de usuario</label>
-              <input
-                id="admin-username"
-                type="text"
-                autoComplete="username"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder={isDemo ? 'admin' : 'tu-usuario'}
-                required={!isDemo}
-                data-autofocus
-              />
-            </div>
+            {mode === 'login' ? (
+              <div className="field">
+                <label htmlFor="admin-identifier">Correo o usuario</label>
+                <input
+                  id="admin-identifier"
+                  type="text"
+                  autoComplete="username"
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
+                  placeholder={isDemo ? 'admin o tu@correo.com' : 'tu@correo.com'}
+                  data-autofocus
+                />
+              </div>
+            ) : (
+              <div className="field">
+                <label htmlFor="admin-email">Correo electrónico</label>
+                <div className="password-wrap">
+                  <input
+                    id="admin-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="tu@correo.com"
+                    required
+                  />
+                  <Mail size={17} aria-hidden="true" className="field-icon" />
+                </div>
+              </div>
+            )}
 
             <div className="field">
               <label htmlFor="admin-password">Contraseña</label>
@@ -95,10 +165,10 @@ export function AdminLogin({ onLogin, isDemo }) {
                 <input
                   id="admin-password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
+                  placeholder={mode === 'register' ? 'Mínimo 6 caracteres' : '••••••••'}
                   required
                 />
                 <button
@@ -111,10 +181,33 @@ export function AdminLogin({ onLogin, isDemo }) {
               </div>
             </div>
 
+            {mode === 'register' && (
+              <div className="field">
+                <label htmlFor="admin-confirm">Confirmar contraseña</label>
+                <input
+                  id="admin-confirm"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Repetí la contraseña"
+                  required
+                />
+              </div>
+            )}
+
             {error && <ErrorNote>{error}</ErrorNote>}
 
-            <button className="btn btn--primary btn--full" type="submit" disabled={busy || !password}>
-              {busy ? <><Spinner label="Ingresando" /> Ingresando…</> : <>Entrar al panel <ArrowRight size={17} aria-hidden="true" /></>}
+            <button
+              className="btn btn--primary btn--full"
+              type="submit"
+              disabled={busy || !password || (mode === 'register' && (!email || !confirmPassword))}
+            >
+              {busy
+                ? <><Spinner label={mode === 'login' ? 'Ingresando' : 'Creando cuenta'} /> {mode === 'login' ? 'Ingresando…' : 'Creando…'}</>
+                : mode === 'login'
+                  ? <>Entrar al panel <ArrowRight size={17} aria-hidden="true" /></>
+                  : <><UserPlus size={17} aria-hidden="true" /> Crear cuenta admin</>}
             </button>
           </form>
 

@@ -11,7 +11,7 @@
 
 Tienda de indumentaria urbana "NyS" adaptada para San Fernando del Valle de Catamarca.  
 Estilo básico, familiar y vecinal. Tienda recién comenzada.  
-Modo demo funcional con password `nys-demo` (sin Supabase conectado).
+Modo demo funcional con password `nys-demo` (sin Supabase conectado). También permite registrar administradores con correo (ej. Gmail); se guardan en `localStorage` bajo `nys-demo-users` (contraseñas hasheadas de forma simple, **solo demo**).
 
 ### Stack Tecnológico
 - **Frontend:** React 18 + Vite 6
@@ -38,6 +38,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado).
 
 ### Admin Panel
 - [x] Login con usuario `admin` / clave `nys-demo`
+- [x] Registro de administradores con correo (Gmail u otro) en modo demo
+- [x] Login con el correo registrado (pestaña "Registrar admin" en el login)
 - [x] Gestión de productos (CRUD)
 - [x] Gestión de pedidos
 - [x] Upload de imágenes
@@ -93,7 +95,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado).
 | Archivo | Descripción |
 |---------|-------------|
 | `src/admin/AdminApp.jsx` | Panel de administración |
-| `src/admin/AdminLogin.jsx` | Login con usuario `admin` |
+| `src/admin/AdminLogin.jsx` | Login con usuario `admin` o correo, y registro de admins demo |
+| `src/hooks/useAuth.js` | Sesión demo, login por correo/usuario y `signUp` demo |
 | `src/admin/AdminPanel.jsx` | Pedidos, catálogo, stock y compras |
 | `src/admin/ProductForm.jsx` | Alta y edición de artículos |
 | `src/admin/PurchaseForm.jsx` | Registro de compras (lote, costo, proveedor, fecha) |

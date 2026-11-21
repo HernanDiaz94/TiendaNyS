@@ -330,6 +330,9 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [x] **Fecha de compra de producto:** Fecha de ingreso por artículo y por lote
 - [x] **Alerta de inventario antiguo:** Aviso para productos con más de 6 meses en inventario
 
+**Pendiente del usuario (Hernán):**
+- [ ] Crear el usuario admin en **Supabase → Authentication → Users** y ejecutar el `insert into public.profiles ... role = 'admin'`. Hasta entonces `/admin` no permitirá ingresar con Supabase activo.
+
 ### Otras mejoras
 - [x] Conectar Supabase para persistencia real de datos (21/11/2026)
 - [ ] Agregar más productos al catálogo

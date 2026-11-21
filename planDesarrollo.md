@@ -162,6 +162,38 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 | `VITE_WHATSAPP_NUMBER` | `5493834198148` |
 | `VITE_INSTAGRAM_HANDLE` | `nys_indumentaria_25` |
 | `VITE_DEMO_ADMIN_PASSWORD` | `nys-demo` |
+| `VITE_SUPABASE_URL` | `https://asqfokknkuciricvbpyn.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | (anon/public key del proyecto — **nunca** `service_role`) |
+
+### Conexión a Supabase (proyecto creado el 21/11/2026)
+
+**Proyecto:** ref `asqfokknkuciricvbpyn` · https://supabase.com/dashboard/project/asqfokknkuciricvbpyn
+
+La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` están definidos, deja de usar `localStorage` y pasa a leer/escribir en la base (`isSupabaseConfigured` en `src/lib/supabase.js`). Si se borran las variables, vuelve al modo demo.
+
+**Pasos para dejarlo andando:**
+
+1. En el dashboard: **SQL Editor → New query**, pegar todo `supabase/schema.sql` y **Run**. Es idempotente: crea tablas, RLS, funciones, bucket de imágenes y el catálogo de 12 productos con las fotos de Pexels aprobadas.
+2. En **Authentication → Providers**, verificar que **Email** esté habilitado. Crear el usuario admin desde **Authentication → Users → Add user** con correo (ej. Gmail) y contraseña.
+3. Darle rol de administrador en **SQL Editor**:
+   ```sql
+   insert into public.profiles (user_id, role)
+   select id, 'admin' from auth.users where email = 'TU_EMAIL@gmail.com'
+   on conflict (user_id) do update set role = 'admin';
+   ```
+4. Copiar la **Project URL** y la **anon key** (Dashboard → Project Settings → API) en `.env` local:
+   ```
+   VITE_SUPABASE_URL=https://asqfokknkuciricvbpyn.supabase.co
+   VITE_SUPABASE_ANON_KEY=...
+   ```
+5. Cargar las mismas dos variables en **Vercel → Settings → Environment Variables** (Production, Preview y Development) y hacer un redeploy (`vercel --prod --name tienda-nys`).
+6. Probar en `/admin`: iniciar sesión con el **correo y contraseña** del usuario creado (en modo Supabase ya no aplica el usuario `admin` / clave `nys-demo`).
+
+> Seguridad: la anon key es pública y está protegida por RLS. La `service_role` **nunca** se pone en variables `VITE_*` ni en el frontend.
+
+**Correcciones aplicadas al esquema antes de ejecutarlo:**
+- Fijado el `REVOKE` de `place_order` (tenía 5 argumentos en la firma; la función tiene 4). Sin esto, el SQL se cortaba antes de crear el bucket de imágenes y `register_purchase`.
+- Semilla actualizada a las 12 fotos finales de Pexels y con `purchased_at` para conservar la alerta de +6 meses en los dos artículos viejos.
 
 ---
 

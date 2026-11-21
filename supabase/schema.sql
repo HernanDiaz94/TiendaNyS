@@ -214,7 +214,7 @@ begin
   return jsonb_build_object('order_id', v_order_id, 'total', v_total);
 end;
 $$;
-revoke all on function public.place_order(text, text, text, text, jsonb) from public, authenticated;
+revoke all on function public.place_order(text, text, text, jsonb) from public, authenticated;
 grant execute on function public.place_order(text, text, text, text, jsonb) to anon, authenticated;
 
 -- Cambiar el estado desde el panel con control de permisos y devolución de stock al cancelar.
@@ -253,21 +253,21 @@ revoke all on function public.admin_update_order_status(uuid, text) from public,
 grant execute on function public.admin_update_order_status(uuid, text) to authenticated;
 
 -- Catálogo de ejemplo. Cambiá o eliminá estos artículos desde el panel de administración.
-insert into public.products (name, description, category, price, stock, image_url, sizes, color, featured)
+insert into public.products (name, description, category, price, stock, image_url, sizes, color, featured, purchased_at)
 select seed.* from (values
-('Campera Siena', 'Abrigo liviano con interior suave y calce relajado.', 'Abrigos', 68900, 7, 'https://images.unsplash.com/photo-1548126032-079a0fb0099d?auto=format&fit=crop&w=1000&q=85', array['S','M','L'], 'Arena', true),
-('Remera Esencial', 'Algodón pesado de tacto suave, corte recto y pensada para todos los días.', 'Remeras', 24900, 12, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&q=85', array['S','M','L','XL'], 'Blanco', true),
-('Mochila Urbana', 'Espacio para lo esencial, diseño simple y resistente para el día a día.', 'Accesorios', 54900, 5, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85', array['Único'], 'Oliva', true),
-('Zapatillas Alba', 'Una silueta clásica y cómoda para acompañarte de la mañana a la noche.', 'Calzado', 79900, 4, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=85', array['36','37','38','39','40'], 'Coral', false),
-('Pantalón Nube', 'Tiro alto y caída fluida. Un básico que combina con todo.', 'Pantalones', 45900, 2, 'https://images.unsplash.com/photo-1506629905607-d9b8c5cbb5d7?auto=format&fit=crop&w=1000&q=85', array['S','M','L'], 'Negro', false),
-('Buzo Monte', 'Frisa suave para los días frescos y las tardes largas.', 'Abrigos', 58900, 6, 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1000&q=85', array['S','M','L','XL'], 'Tostado', true),
-('Gorra Brisa', 'Visera curva, hebilla regulable y onda relajada.', 'Accesorios', 18900, 9, 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=1000&q=85', array['Único'], 'Crudo', false),
-('Sandalias Costa', 'Livianas y versátiles para acompañar el verano.', 'Calzado', 32900, 0, 'https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=1000&q=85', array['37','38','39','40'], 'Suela', false),
-('Camisa Oliva', 'Textura natural, botones de madera y calce amplio. Para usar abierta o cerrada.', 'Camisas', 41900, 5, 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=1000&q=85', array['S','M','L'], 'Oliva', false),
-('Tote Mercado', 'Bolso amplio de lona para llevar un poco de todo.', 'Accesorios', 15900, 10, 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=1000&q=85', array['Único'], 'Natural', false),
-('Botitas Sur', 'Clásicas, cómodas y listas para caminar la ciudad.', 'Calzado', 89900, 1, 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1000&q=85', array['36','37','38','39'], 'Marrón', false),
-('Chaleco Clara', 'Una capa liviana para sumar abrigo sin perder comodidad.', 'Abrigos', 52900, 2, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85', array['S','M','L'], 'Crema', false)
-) as seed(name, description, category, price, stock, image_url, sizes, color, featured)
+('Campera Siena', 'Abrigo liviano con interior suave y calce relajado. Ideal para media estación.', 'Abrigos', 68900, 7, 'https://images.pexels.com/photos/14330778/pexels-photo-14330778.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Arena', true, now()),
+('Remera Esencial', 'Algodón pesado de tacto suave, corte recto y pensada para todos los días.', 'Remeras', 24900, 12, 'https://images.pexels.com/photos/6786614/pexels-photo-6786614.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Blanco', true, now()),
+('Mochila Urbana', 'Espacio para lo esencial, diseño simple y resistente para el día a día.', 'Accesorios', 54900, 5, 'https://images.pexels.com/photos/12477384/pexels-photo-12477384.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Oliva', true, now()),
+('Zapatillas Alba', 'Una silueta clásica y cómoda para acompañarte de la mañana a la noche.', 'Calzado', 79900, 4, 'https://images.pexels.com/photos/33353887/pexels-photo-33353887.jpeg?auto=compress&cs=tinysrgb&w=1000', array['36','37','38','39','40'], 'Coral', false, now()),
+('Pantalón Nube', 'Tiro alto y caída fluida. Un básico que combina con todo.', 'Pantalones', 45900, 2, 'https://images.pexels.com/photos/14200504/pexels-photo-14200504.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Negro', false, now()),
+('Buzo Monte', 'Frisa suave para los días frescos y las tardes largas.', 'Abrigos', 58900, 6, 'https://images.pexels.com/photos/5789010/pexels-photo-5789010.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Tostado', true, now()),
+('Gorra Brisa', 'Visera curva, hebilla regulable y onda relajada.', 'Accesorios', 18900, 9, 'https://images.pexels.com/photos/7562957/pexels-photo-7562957.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Crudo', false, now()),
+('Sandalias Costa', 'Livianas y versátiles para acompañar el verano.', 'Calzado', 32900, 0, 'https://images.pexels.com/photos/23692992/pexels-photo-23692992.jpeg?auto=compress&cs=tinysrgb&w=1000', array['37','38','39','40'], 'Suela', false, now()),
+('Camisa Oliva', 'Textura natural, botones de madera y calce amplio. Para usar abierta o cerrada.', 'Camisas', 41900, 5, 'https://images.pexels.com/photos/17476810/pexels-photo-17476810.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Oliva', false, now() - interval '212 days'),
+('Tote Mercado', 'Bolso amplio de lona para llevar un poco de todo.', 'Accesorios', 15900, 10, 'https://images.pexels.com/photos/17836626/pexels-photo-17836626.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Natural', false, now()),
+('Botitas Sur', 'Clásicas, cómodas y listas para caminar la ciudad.', 'Calzado', 89900, 1, 'https://images.pexels.com/photos/19750710/pexels-photo-19750710.jpeg?auto=compress&cs=tinysrgb&w=1000', array['36','37','38','39'], 'Marrón', false, now() - interval '248 days'),
+('Chaleco Clara', 'Una capa liviana para sumar abrigo sin perder comodidad.', 'Abrigos', 52900, 2, 'https://images.pexels.com/photos/9904108/pexels-photo-9904108.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Crema', false, now())
+) as seed(name, description, category, price, stock, image_url, sizes, color, featured, purchased_at)
 where not exists (
   select 1 from public.products existing
   where existing.name = seed.name and existing.color = seed.color

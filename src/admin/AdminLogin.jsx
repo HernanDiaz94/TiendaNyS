@@ -10,7 +10,6 @@ import {
   ShoppingBag,
   UserPlus,
 } from 'lucide-react';
-import { DEMO_PASSWORD } from '../hooks/useAuth.js';
 import { ErrorNote, Notice, Spinner } from '../components/ui.jsx';
 
 export function AdminLogin({ onLogin, onSignUp, isDemo }) {
@@ -112,13 +111,6 @@ export function AdminLogin({ onLogin, onSignUp, isDemo }) {
               ? 'Ingresá con tu correo registrado o con el usuario de la tienda.'
               : 'Registrá un correo (puede ser Gmail) para dar acceso al panel.'}
           </p>
-
-          {isDemo && mode === 'login' && (
-            <Notice tone="info">
-              <strong>Modo demostración.</strong> Entrá con <strong>admin</strong> / <code>{DEMO_PASSWORD}</code>,
-              o con un correo registrado desde la pestaña <strong>Registrar admin</strong>. Los cambios quedan solo en este navegador.
-            </Notice>
-          )}
 
           {isDemo && mode === 'register' && (
             <Notice tone="info">

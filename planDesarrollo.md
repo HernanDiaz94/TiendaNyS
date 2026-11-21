@@ -169,6 +169,7 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 | Commit | Descripción |
 |--------|-------------|
+| `d450646` | feat: imagen Drop 01 2026 como foto principal del hero |
 | `4d18cf1` | fix: quitar aviso de modo demostración en el login |
 | `543d4f0` | feat: registro de administradores con correo en modo demo |
 | `7e26689` | feat: ícono de ubicación en la dirección del footer |

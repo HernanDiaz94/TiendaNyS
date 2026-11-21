@@ -1,9 +1,11 @@
-# Tienda NyS — Registro del Proyecto
+# Tienda NyS — Planificación y Registro del Proyecto
 
-**Última actualización:** 20 de Noviembre, 2026  
+**Última actualización:** 21 de Noviembre, 2026  
 **Repositorio:** https://github.com/HernanDiaz94/TiendaNyS  
 **Sitio en producción:** https://tienda-nys.vercel.app/  
 **Sitio anterior (pausado):** https://tienda-nys.netlify.app/
+
+> Este es el **único documento de planificación** del proyecto. Toda decisión, cambio, commit y punto de retorno se registra acá.
 
 ---
 
@@ -25,21 +27,22 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 ## ✅ Funcionalidades Implementadas
 
 ### Storefront (Tienda)
-- [x] Catálogo de 12 productos con fotos de modelos (Unsplash)
+- [x] Catálogo de 12 productos con fotos con estética andina (Pexels)
 - [x] Filtros por categoría, talle y búsqueda
 - [x] Carrito de compras (localStorage)
 - [x] Modal de producto con detalles
-- [x] Checkout por WhatsApp (mensaje automático con pedido)
-- [x] Hero section con imagen y sticker "DROP 01"
+- [x] Checkout sin DNI: solo Nombre y WhatsApp
+- [x] Checkout por WhatsApp (mensaje con nombre, talle, cantidad y precio por producto)
+- [x] Hero section con foto real de Valle Chico y sticker "DROP 01"
 - [x] Sección "Nosotros" (Story) con stamp "CTA EST. 2025"
-- [x] Footer con dirección, horarios y WhatsApp
+- [x] Footer con dirección (ícono de ubicación), horarios separados y WhatsApp
 - [x] Marquee animado
 - [x] Diseño responsive
 
 ### Admin Panel
-- [x] Login con usuario `admin` / clave `nys-demo`
-- [x] Registro de administradores con correo (Gmail u otro) en modo demo
-- [x] Login con el correo registrado (pestaña "Registrar admin" en el login)
+- [x] Login con usuario `admin` / clave `nys-demo` o con correo registrado
+- [x] Registro de administradores con correo (Gmail u otro) en modo demo (pestaña "Registrar admin")
+- [x] Aviso de modo demostración removido del login (pedido del usuario)
 - [x] Gestión de productos (CRUD)
 - [x] Gestión de pedidos
 - [x] Upload de imágenes
@@ -89,7 +92,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 ### Datos
 | Archivo | Descripción |
 |---------|-------------|
-| `src/data/demoProducts.js` | 12 productos con imágenes Unsplash de modelo |
+| `src/data/demoProducts.js` | 12 productos con imágenes Pexels (estética andina) |
+| `src/lib/demoStore.js` | Persistencia demo; migra fotos viejas de Unsplash y URLs reemplazadas a las nuevas |
 
 ### Admin
 | Archivo | Descripción |
@@ -100,7 +104,6 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/admin/AdminPanel.jsx` | Pedidos, catálogo, stock y compras |
 | `src/admin/ProductForm.jsx` | Alta y edición de artículos |
 | `src/admin/PurchaseForm.jsx` | Registro de compras (lote, costo, proveedor, fecha) |
-| `src/hooks/useAuth.js` | Validación de credenciales demo |
 | `src/hooks/usePurchases.js` | Historial de compras (Supabase o demo) |
 | `src/lib/inventory.js` | Antigüedad de stock, validación de compras y alerta de +6 meses |
 
@@ -166,6 +169,16 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 | Commit | Descripción |
 |--------|-------------|
+| `4d18cf1` | fix: quitar aviso de modo demostración en el login |
+| `543d4f0` | feat: registro de administradores con correo en modo demo |
+| `7e26689` | feat: ícono de ubicación en la dirección del footer |
+| `9390a91` | fix: mejorar separación de dirección y horarios en el footer |
+| `49ea062` | feat: foto real de Valle Chico como imagen principal del hero |
+| `697d8d5` | feat: hero con paisaje de Valle Chico y vista aérea de San Fernando del Valle |
+| `308bab6` | feat: fotos más catamarqueñas para mochila y zapatillas |
+| `33c0d00` | feat: fotos de productos con estética andina y migración automática del demo |
+| `b29df7d` | feat: paisajes de Catamarca en hero, story y og:image |
+| `3af4321` | docs: actualizar plan con compras, inventario y commits recientes |
 | `ef726da` | feat: registro de compras con stock, fecha de ingreso y alerta de inventario +6 meses |
 | `79251d1` | fix: import directo de AdminApp (el panel no cargaba con lazy import) |
 | `17fce97` | feat: quitar DNI del checkout y detallar productos en el mensaje de WhatsApp |
@@ -186,6 +199,32 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 | `f23dcb9` | feat: actualizar auth con nombre de usuario y ajustes varios |
 | `87d38be` | Tienda NyS: commit inicial con adaptaciones a Catamarca |
 
+### 🏷️ Tags (puntos de retorno)
+
+| Tag | Commit | Para qué sirve |
+|-----|--------|----------------|
+| `punto-retorno-imagenes` | `3af4321` | Estado anterior a **todo** el cambio de fotos (hero, story, catálogo, og:image) |
+| `imagenes-final-aprobadas` | `308bab6` | Catálogo e imágenes aprobadas por el usuario |
+| `hero-valle-chico` | `697d8d5` | Hero con paisaje rural del valle + vista aérea |
+| `hero-valle-chico-real` | `49ea062` | Hero principal con la foto real de Valle Chico (Catamarca RT) |
+| `registro-admin-demo` | `543d4f0` | Registro de administradores con correo en modo demo |
+
+**Ejemplos de rollback:**
+
+```bash
+# Volver a las fotos originales (antes de todo el cambio)
+git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx \
+  src/data/demoProducts.js src/lib/demoStore.js index.html src/styles.css
+
+# Volver al catálogo aprobado, sin tocar el hero actual
+git checkout imagenes-final-aprobadas -- src/data/demoProducts.js src/lib/demoStore.js
+
+# Volver al hero anterior a la foto real
+git checkout hero-valle-chico -- src/components/Hero.jsx
+```
+
+> Los tags están subidos a GitHub (`git push origin --tags`).
+
 ---
 
 ## 🐛 Problemas Resueltos
@@ -197,8 +236,23 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 ### 2. Login admin con email en lugar de usuario
 - **Causa:** El sistema usaba email para autenticación
-- **Solución:** Cambiar a nombre de usuario `admin` / clave `nys-demo`
+- **Solución:** Cambiar a nombre de usuario `admin` / clave `nys-demo`. Después se amplió para aceptar **ambos**: usuario o correo registrado (`signIn` usa `identifier` y detecta si contiene `@`).
 - **Archivos:** `src/admin/AdminLogin.jsx`, `src/hooks/useAuth.js`
+
+### 6. Fotos viejas en localStorage al cambiar el catálogo
+- **Causa:** El modo demo guarda los productos en `localStorage`; los usuarios ya tenían las URLs de Unsplash guardadas
+- **Solución:** Migración automática en `demoStore.js` que reemplaza URLs viejas y también las dos fotos posteriormente corregidas (mochila y zapatillas), sin borrar stock, pedidos ni compras
+- **Archivos:** `src/lib/demoStore.js`
+
+### 7. Servidor de desarrollo sirviendo código viejo
+- **Causa:** El watcher de Vite no registró cambios escritos mientras la terminal estaba colgada
+- **Solución:** Reiniciar `npm run dev` y recargar con query string para evitar caché
+- **Archivos:** ninguno (issues de entorno)
+
+### 8. Panel de admin no cargaba (pantalla "Cargando panel…")
+- **Causa:** Import lazy de `AdminApp`
+- **Solución:** Import directo en `src/App.jsx`
+- **Archivos:** `src/App.jsx`
 
 ### 3. Errores de CSP en consola
 - **Causa:** Meta tag CSP bloqueaba estilos/scripts inline
@@ -279,10 +333,21 @@ git commit -m "mensaje"
 git push origin main  # Deploy automático en Vercel
 
 # Vercel CLI
-vercel --prod        # Deploy manual
-vercel logs          # Ver logs de deploy
+vercel --prod --name tienda-nys   # Deploy manual (producción)
+vercel logs                       # Ver logs de deploy
+
+# Tags
+git tag -l                        # Listar puntos de retorno
+git push origin --tags            # Subir tags a GitHub
 ```
 
 ---
 
-*Documento generado automáticamente. Última actualización: 20 de Noviembre, 2026*
+## ✅ Estado actual (21 de Noviembre, 2026)
+
+- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con foto real de Valle Chico, footer con ícono de ubicación, login con registro de admins demo y sin aviso de demostración.
+- **Tests:** 32/32 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
+- Repositorio limpio, sin cambios pendientes.
+- Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
+
+*Documento actualizado manualmente. Última actualización: 21 de Noviembre, 2026*

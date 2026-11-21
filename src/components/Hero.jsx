@@ -1,8 +1,8 @@
 import { ArrowDownRight, ArrowRight, MapPin, Package, ShieldCheck } from 'lucide-react';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
-// Valle Chico, San Fernando del Valle de Catamarca (foto: Catamarca RT).
-const HERO_IMAGE = 'https://catamarcartv.com/wp-content/uploads/2024/12/IMG_5197-scaled.jpeg';
+// Imagen principal del hero: Drop 01 2026 (archivo local en /public).
+const HERO_IMAGE = '/drop-01-2026.jpg';
 const HERO_DETAIL = 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Vista_a%C3%A9rea_de_San_Fernando_del_Valle_de_Catamarca%2C_Argentina.jpg';
 
 const MARQUEE_ITEMS = [
@@ -68,7 +68,7 @@ export function Hero({ whatsappUrl, instagramUrl }) {
           <figure className="hero-main">
             <ProductImage
               src={HERO_IMAGE}
-              alt="Valle Chico, San Fernando del Valle de Catamarca, Argentina"
+              alt="Colección Drop 01 2026 de NyS Indumentaria"
               eager
             />
           </figure>

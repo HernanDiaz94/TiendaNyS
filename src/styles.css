@@ -560,7 +560,7 @@ a {
 .hero-main {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 4 / 4.6;
+  aspect-ratio: 1337 / 784;
   background: var(--surface-2);
 }
 
@@ -4130,7 +4130,7 @@ a {
   }
 
   .hero {
-    grid-template-columns: 1.02fr 0.98fr;
+    grid-template-columns: 0.95fr 1.05fr;
     align-items: center;
     gap: 54px;
     padding-top: 64px;
@@ -4141,7 +4141,7 @@ a {
   }
 
   .hero-main {
-    aspect-ratio: 4 / 4.7;
+    aspect-ratio: 1337 / 784;
   }
 
   .hero-detail {

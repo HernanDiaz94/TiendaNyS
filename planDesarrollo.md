@@ -136,13 +136,13 @@ Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
 
 | Componente | Foto | Descripción |
 |-----------|------|-------------|
-| Hero (principal) | Catamarca RT · `IMG_5197-scaled.jpeg` | **Valle Chico**, San Fernando del Valle de Catamarca (foto del usuario) |
+| Hero (principal) | `public/drop-01-2026.jpg` (imagen del usuario, generada con Gemini) | Imagen principal **Drop 01 2026**; se muestra completa (apaisada 1337×784) |
 | Hero (detalle) | Wikimedia Commons · *Vista aérea de San Fernando del Valle de Catamarca* (dominio público) | Vista aérea del valle |
 | Story (principal) | pexels-31204629 | Valle y cerros de los Andes |
 | Story (detalle) | pexels-21558539 | Ruta entre cerros rojos de Fiambalá |
 | `og:image` | pexels-37610517 | Laguna y picos nevados |
 
-> La foto principal del hero es una imagen real de **Valle Chico** aportada por el usuario (Catamarca RT). El detalle sigue siendo una vista aérea de San Fernando del Valle (dominio público). El resto de las fotos libres no están etiquetadas específicamente como "Valle Chico".
+> La foto principal del hero es la imagen **Drop 01 2026** aportada por el usuario (archivo local `public/drop-01-2026.jpg`). La foto anterior de Valle Chico (Catamarca RT) se puede recuperar con `git checkout hero-valle-chico-real -- src/components/Hero.jsx`. El detalle sigue siendo una vista aérea de San Fernando del Valle (dominio público).
 
 > **Punto de retorno:** tag `punto-retorno-imagenes` (commit `3af4321`). Para volver a todas las fotos anteriores: `git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx src/data/demoProducts.js src/lib/demoStore.js index.html src/styles.css`.
 

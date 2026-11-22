@@ -176,6 +176,19 @@ Cada prenda tiene su propia URL `/producto/<slug>/` (por ejemplo `/producto/boti
 
 ---
 
+## 📊 Analytics (22/11/2026)
+
+Se eligió **Vercel Web Analytics** (no GA4): no necesita ID de medición, no usa cookies de terceros y se consulta directo en el dashboard del proyecto.
+
+- Dependencia: `@vercel/analytics@2.0.1` (`npm install @vercel/analytics`).
+- `src/App.jsx`: `<Analytics mode={import.meta.env.PROD ? 'production' : 'development'} />` se monta **solo en la tienda**; `/admin` queda fuera para no medir al dueño ni la sesión del panel.
+- No hay que agregar variables de entorno ni scripts al `index.html`: el componente inyecta el snippet automáticamente.
+- **Verificado en producción:** el navegador descarga `/_vercel/insights/script.js` (200) y envía `POST /_vercel/insights/view` (200 `OK`) con el payload del SDK (`@vercel/analytics/react` v2.0.1). El bundle deployado contiene el snippet.
+- **Dónde verlo:** Vercel → proyecto `tienda-nys` → pestaña **Analytics** → Web Analytics. Los primeros datos pueden tardar unos minutos en aparecer.
+- Con el soporte de rutas del paquete (1.4+), se pueden filtrar visitas por `/` y por `/producto/<slug>/`.
+
+---
+
 ## 🔧 Variables de Entorno
 
 ### `.env` (local)
@@ -234,6 +247,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `8740060` | feat(analytics): agregar Vercel Web Analytics a la tienda |
 | `e29b58f` | feat(auth): login admin con nombre de usuario en Supabase |
 | `198fcd5` | feat(seo): páginas estáticas por producto y rutas `/producto` |
 | `1c1df0b` | feat(seo): agregar robots, sitemap, canonical y datos estructurados |
@@ -384,7 +398,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Implementar búsqueda avanzada
 - [ ] Agregar sistema de reviews/calificaciones
 - [ ] Configurar dominio personalizado
-- [ ] Agregar Google Analytics
+- [x] Vercel Web Analytics (sin cookies ni ID, solo tienda — 22/11/2026)
 
 ---
 
@@ -430,6 +444,7 @@ git push origin --tags            # Subir tags a GitHub
 - Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading, hero WebP (-79% vs JPG) y acentos del catálogo corregidos (`Marrón`, `Pantalón`, `Único`).
 - **SEO completo:** robots, sitemap con 12 URLs de producto, canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer` para compartir en WhatsApp.
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin` tanto con correo como con el alias **`hernan`** (SQL `add-username-login.sql` ejecutado y RPC verificado).
+- **Analytics:** Vercel Web Analytics activo en la tienda (excluido `/admin`); script y evento de vista responden 200 en producción.
 - **Tests:** 54/54 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.

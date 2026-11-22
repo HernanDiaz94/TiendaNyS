@@ -20,7 +20,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - **Estilos:** CSS vanilla (paleta tierra suave)
 - **Backend:** Supabase (opcional, modo demo con localStorage)
 - **Hosting:** Vercel (deploy automático desde GitHub)
-- **Testing:** Vitest (37 tests)
+- **Testing:** Vitest (49 tests)
 
 ---
 
@@ -160,8 +160,19 @@ Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
 
 ### Etapa 1 — SEO base (22/11/2026)
 - `public/robots.txt`: permite todo el sitio, bloquea `/admin` y apunta al sitemap.
-- `public/sitemap.xml`: incluye la home (la etapa 2 agrega una URL por producto).
 - `index.html`: `canonical`, `og:url` y JSON-LD con `ClothingStore` (nombre, teléfono, dirección de Valle Chico e Instagram).
+
+### Etapa 2 — SEO por producto (22/11/2026)
+
+Cada prenda tiene su propia URL `/producto/<slug>/` (por ejemplo `/producto/botitas-sur/`).
+
+- `src/lib/productSeo.js`: slugs sin acentos, mapa slug → producto (con sufijo de id si hay nombres repetidos), ruta canónica, imagen absoluta y JSON-LD `Product` + `Offer` (precio ARS, disponibilidad según stock, tienda como seller).
+- `scripts/generate-seo.mjs`: se ejecuta como **`postbuild`** (después de `vite build`). Lee los productos activos desde Supabase con la **publishable key** (sin `service_role`) y genera `dist/producto/<slug>/index.html` partiendo del `index.html` de Vite. Si no hay Supabase, usa `demoProducts` para que el build local también funcione.
+- `scripts/seoPages.js`: reemplaza título, descripción, canonical, `og:*`, `twitter:*` y el JSON-LD. El sitemap de la etapa 1 se sobrescribe con la home + 12 URLs de producto.
+- `Storefront.jsx`: abrir una tarjeta hace `pushState` a la URL del producto; cerrar vuelve a `/`; el botón **atrás** del navegador cierra el modal. Al entrar directo a una URL de producto, el catálogo carga y abre automáticamente el modal. `document.title` sigue al producto.
+- **Por qué HTML estático y no solo JS:** WhatsApp, Facebook, Twitter e Instagram **no ejecutan JavaScript**. Al generar el HTML en el build, el link compartido muestra foto, nombre, precio y disponibilidad reales. Google también indexa esas páginas sin depender del render del SPA.
+- **Verificado en producción:** las 12 páginas devuelven 200 con `og:type=product`, JSON-LD de producto y canonical propio; `/sitemap.xml` lista 12 URLs; el modal se abre desde la URL directa sin errores de consola.
+- **Aclaración:** los meta tags se actualizan en cada **deploy**. Si cambiás precio, foto o stock en el admin, hay que correr un deploy para regenerar el HTML (los datos que se ven dentro del modal sí son en vivo desde Supabase).
 
 ---
 
@@ -220,6 +231,8 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `198fcd5` | feat(seo): páginas estáticas por producto y rutas `/producto` |
+| `1c1df0b` | feat(seo): agregar robots, sitemap, canonical y datos estructurados |
 | `790ac4e` | fix: reparar acentos corruptos en el catálogo de Supabase |
 | `e60779a` | perf: optimizar imágenes con WebP, `srcset` y lazy loading |
 | `64487bd` | chore: dejar de versionar `.env` |
@@ -363,7 +376,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Configurar MercadoPago para pagos online
 - [ ] Agregar más categorías de productos
 - [x] Optimizar imágenes (WebP, srcset y lazy loading mejorado — 22/11/2026)
-- [ ] Agregar SEO meta tags por producto
+- [x] SEO base + por producto (HTML estático por prenda, JSON-LD y sitemap — 22/11/2026)
 - [ ] Implementar búsqueda avanzada
 - [ ] Agregar sistema de reviews/calificaciones
 - [ ] Configurar dominio personalizado
@@ -387,10 +400,10 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 37 tests
+npm test             # Ejecuta 49 tests
 
 # Build
-npm run build        # Genera dist/ para producción
+npm run build        # Genera dist/ + 12 páginas SEO de producto (postbuild)
 
 # Git
 git add .
@@ -411,8 +424,9 @@ git push origin --tags            # Subir tags a GitHub
 ## ✅ Estado actual (22 de Noviembre, 2026)
 
 - Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading, hero WebP (-79% vs JPG) y acentos del catálogo corregidos (`Marrón`, `Pantalón`, `Único`).
+- **SEO completo:** robots, sitemap con 12 URLs de producto, canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer` para compartir en WhatsApp.
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin`.
-- **Tests:** 37/37 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
+- **Tests:** 49/49 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
 

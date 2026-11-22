@@ -184,7 +184,8 @@ Se eligió **Vercel Web Analytics** (no GA4): no necesita ID de medición, no us
 - `src/App.jsx`: `<Analytics mode={import.meta.env.PROD ? 'production' : 'development'} />` se monta **solo en la tienda**; `/admin` queda fuera para no medir al dueño ni la sesión del panel.
 - No hay que agregar variables de entorno ni scripts al `index.html`: el componente inyecta el snippet automáticamente.
 - **Verificado en producción:** el navegador descarga `/_vercel/insights/script.js` (200) y envía `POST /_vercel/insights/view` (200 `OK`) con el payload del SDK (`@vercel/analytics/react` v2.0.1). El bundle deployado contiene el snippet.
-- **Dónde verlo:** Vercel → proyecto `tienda-nys` → pestaña **Analytics** → Web Analytics. Los primeros datos pueden tardar unos minutos en aparecer.
+- ⚠️ **Pendiente del dashboard (no es código):** el proyecto aún tiene `features.webAnalytics: false` y la API de consulta responde `400 Web Analytics is not enabled for this project`. Hay que abrir Vercel → proyecto `tienda-nys` → pestaña **Analytics** → botón **Enable**. Recién ahí se verán los datos (puede requerir un redeploy; los primeros datos tardan unos minutos).
+- **Dónde verlo:** Vercel → proyecto `tienda-nys` → pestaña **Analytics** → Web Analytics.
 - Con el soporte de rutas del paquete (1.4+), se pueden filtrar visitas por `/` y por `/producto/<slug>/`.
 
 ---
@@ -398,7 +399,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Implementar búsqueda avanzada
 - [ ] Agregar sistema de reviews/calificaciones
 - [ ] Configurar dominio personalizado
-- [x] Vercel Web Analytics (sin cookies ni ID, solo tienda — 22/11/2026)
+- [x] Vercel Web Analytics: integración lista (sin cookies ni ID, solo tienda — 22/11/2026). Falta clickear **Enable** en el dashboard de Vercel.
 
 ---
 
@@ -444,7 +445,7 @@ git push origin --tags            # Subir tags a GitHub
 - Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading, hero WebP (-79% vs JPG) y acentos del catálogo corregidos (`Marrón`, `Pantalón`, `Único`).
 - **SEO completo:** robots, sitemap con 12 URLs de producto, canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer` para compartir en WhatsApp.
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin` tanto con correo como con el alias **`hernan`** (SQL `add-username-login.sql` ejecutado y RPC verificado).
-- **Analytics:** Vercel Web Analytics activo en la tienda (excluido `/admin`); script y evento de vista responden 200 en producción.
+- **Analytics:** integración de Vercel Web Analytics deployada (excluye `/admin`); script y evento de vista responden 200. Falta habilitar Web Analytics en el dashboard de Vercel para ver los reportes.
 - **Tests:** 54/54 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.

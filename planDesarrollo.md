@@ -211,6 +211,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `790ac4e` | fix: reparar acentos corruptos en el catálogo de Supabase |
 | `e60779a` | perf: optimizar imágenes con WebP, `srcset` y lazy loading |
 | `64487bd` | chore: dejar de versionar `.env` |
 | `85a30e9` | fix: corregir también el `GRANT` de `place_order` en `schema.sql` |
@@ -400,7 +401,7 @@ git push origin --tags            # Subir tags a GitHub
 
 ## ✅ Estado actual (22 de Noviembre, 2026)
 
-- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading y hero WebP (-79% vs JPG).
+- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading, hero WebP (-79% vs JPG) y acentos del catálogo corregidos (`Marrón`, `Pantalón`, `Único`).
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin`.
 - **Tests:** 37/37 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).

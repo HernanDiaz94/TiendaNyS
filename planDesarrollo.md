@@ -220,7 +220,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 6. Probar en `/admin`: iniciar sesión con el **correo y contraseña** del usuario creado (en modo Supabase ya no aplica el usuario `admin` / clave `nys-demo`).
 7. **Login por nombre de usuario (22/11/2026):** ejecutar una vez `supabase/add-username-login.sql` en el SQL Editor. Agrega `profiles.username`, el RPC `resolve_admin_username` y setea el alias **`hernan`** para `hernan.diiaz@gmail.com`. Después se puede entrar con **`hernan` + la contraseña de Supabase** (o seguir usando el correo). El RPC es `security definer`, solo devuelve el email de perfiles con `role = 'admin'` y se lo concede a `anon`/`authenticated`. El error de usuario inexistente es idéntico al de credenciales inválidas para no revelar aliases. El mismo bloque quedó incorporado a `supabase/schema.sql` para instalaciones nuevas.
 
-> El código ya está deployado (`e29b58f`); el paso 7 lo ejecuta el usuario en el dashboard. Hasta que se corra, el login con correo sigue funcionando normal y solo falla el intento con usuario.
+> Ejecutado y verificado el 22/11/2026: el RPC responde `hernan` → `hernan.diiaz@gmail.com` (ignora mayúsculas, devuelve `null` para aliases inexistentes) y se confirmó el ingreso a `/admin` con **`hernan` + la contraseña de Supabase**. El login con correo sigue funcionando igual. Réplica en modo demo: `admin` / `nys-demo`.
 
 > Seguridad: la publishable key (o la anon legacy) es pública y está protegida por RLS. La `service_role` / secret key **nunca** se pone en variables `VITE_*` ni en el frontend.
 
@@ -429,7 +429,7 @@ git push origin --tags            # Subir tags a GitHub
 
 - Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading, hero WebP (-79% vs JPG) y acentos del catálogo corregidos (`Marrón`, `Pantalón`, `Único`).
 - **SEO completo:** robots, sitemap con 12 URLs de producto, canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer` para compartir en WhatsApp.
-- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin`. Login por usuario (`hernan`) implementado y deployado; queda ejecutar `supabase/add-username-login.sql` en el dashboard para activar el alias.
+- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin` tanto con correo como con el alias **`hernan`** (SQL `add-username-login.sql` ejecutado y RPC verificado).
 - **Tests:** 54/54 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.

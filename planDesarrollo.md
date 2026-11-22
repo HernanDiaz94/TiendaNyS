@@ -1,6 +1,6 @@
 # Tienda NyS — Planificación y Registro del Proyecto
 
-**Última actualización:** 21 de Noviembre, 2026  
+**Última actualización:** 22 de Noviembre, 2026  
 **Repositorio:** https://github.com/HernanDiaz94/TiendaNyS  
 **Sitio en producción:** https://tienda-nys.vercel.app/  
 **Sitio anterior (pausado):** https://tienda-nys.netlify.app/
@@ -211,6 +211,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `e60779a` | perf: optimizar imágenes con WebP, `srcset` y lazy loading |
 | `64487bd` | chore: dejar de versionar `.env` |
 | `85a30e9` | fix: corregir también el `GRANT` de `place_order` en `schema.sql` |
 | `4e52b7d` | fix: corregir esquema SQL y semilla de fotos para Supabase |
@@ -392,12 +393,12 @@ git push origin --tags            # Subir tags a GitHub
 
 ---
 
-## ✅ Estado actual (21 de Noviembre, 2026)
+## ✅ Estado actual (22 de Noviembre, 2026)
 
-- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026**, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador).
+- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading y hero WebP (-79% vs JPG).
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Falta crear el usuario admin desde Authentication → Users y asignarle `role = 'admin'`.
 - **Tests:** 37/37 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
 
-*Documento actualizado manualmente. Última actualización: 21 de Noviembre, 2026*
+*Documento actualizado manualmente. Última actualización: 22 de Noviembre, 2026*

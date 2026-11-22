@@ -391,7 +391,12 @@ export function CartDrawer({
             <ul className="cart-lines">
               {cart.map((item) => (
                 <li className="cart-line" key={`${item.id}-${item.size}`}>
-                  <ProductImage src={item.image_url} alt={item.name} className="cart-thumb" />
+                  <ProductImage
+                    src={item.image_url}
+                    alt={item.name}
+                    className="cart-thumb"
+                    sizes="88px"
+                  />
                   <div className="cart-line-copy">
                     <h3>{item.name}</h3>
                     <p>

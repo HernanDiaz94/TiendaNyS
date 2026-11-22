@@ -20,7 +20,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - **Estilos:** CSS vanilla (paleta tierra suave)
 - **Backend:** Supabase (opcional, modo demo con localStorage)
 - **Hosting:** Vercel (deploy automático desde GitHub)
-- **Testing:** Vitest (32 tests)
+- **Testing:** Vitest (37 tests)
 
 ---
 
@@ -136,13 +136,21 @@ Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
 
 | Componente | Foto | Descripción |
 |-----------|------|-------------|
-| Hero (principal) | `public/drop-01-2026.jpg` (imagen del usuario, generada con Gemini) | Imagen principal **Drop 01 2026**; se muestra completa (apaisada 1337×784) |
+| Hero (principal) | `public/drop-01-2026.webp` (JPG original como fallback) | Imagen principal **Drop 01 2026**; se muestra completa (apaisada 1337×784) |
 | Hero (detalle) | Wikimedia Commons · *Vista aérea de San Fernando del Valle de Catamarca* (dominio público) | Vista aérea del valle |
 | Story (principal) | pexels-31204629 | Valle y cerros de los Andes |
 | Story (detalle) | pexels-21558539 | Ruta entre cerros rojos de Fiambalá |
 | `og:image` | pexels-37610517 | Laguna y picos nevados |
 
-> La foto principal del hero es la imagen **Drop 01 2026** aportada por el usuario (archivo local `public/drop-01-2026.jpg`). La foto anterior de Valle Chico (Catamarca RT) se puede recuperar con `git checkout hero-valle-chico-real -- src/components/Hero.jsx`. El detalle sigue siendo una vista aérea de San Fernando del Valle (dominio público).
+> La foto principal del hero es la imagen **Drop 01 2026** aportada por el usuario (archivo local `public/drop-01-2026.webp`, con `drop-01-2026.jpg` como fallback). La foto anterior de Valle Chico (Catamarca RT) se puede recuperar con `git checkout hero-valle-chico-real -- src/components/Hero.jsx`. El detalle sigue siendo una vista aérea de San Fernando del Valle (dominio público).
+
+### Optimización de imágenes (22/11/2026)
+
+- `src/lib/imageUrls.js` genera automáticamente un **`srcset`** con anchos 320/480/640/800/1000 (más el ancho declarado en la URL) para las fotos de Pexels. El CDN ya negocia **AVIF/WebP** con `auto=compress`, así que no se fuerza un formato.
+- `ProductImage` acepta `sizes`, `srcSet` y `fallbackSrc`, y usa `fetchPriority="high"` en imágenes `eager`. El `loading="lazy"` se mantiene para el resto.
+- Hero local convertido a **WebP** con `sharp`: `drop-01-2026.webp` (176 KB vs 852 KB del JPG, **-79%**), más variantes de 1000 px (108 KB) y 640 px (48 KB) para móvil. El JPG original queda como fallback.
+- `index.html` precarga el WebP del hero con `imagesrcset`/`imagesizes`.
+- Medido en el navegador: el hero elige la variante de 1000w en desktop y las tarjetas del catálogo bajan de 1000w a **640w**, con `sizes` y `loading="lazy"` correctos.
 
 > **Punto de retorno:** tag `punto-retorno-imagenes` (commit `3af4321`). Para volver a todas las fotos anteriores: `git checkout punto-retorno-imagenes -- src/components/Hero.jsx src/components/Story.jsx src/data/demoProducts.js src/lib/demoStore.js index.html src/styles.css`.
 
@@ -338,7 +346,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Agregar más productos al catálogo
 - [ ] Configurar MercadoPago para pagos online
 - [ ] Agregar más categorías de productos
-- [ ] Optimizar imágenes (WebP, lazy loading mejorado)
+- [x] Optimizar imágenes (WebP, srcset y lazy loading mejorado — 22/11/2026)
 - [ ] Agregar SEO meta tags por producto
 - [ ] Implementar búsqueda avanzada
 - [ ] Agregar sistema de reviews/calificaciones
@@ -363,7 +371,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 32 tests
+npm test             # Ejecuta 37 tests
 
 # Build
 npm run build        # Genera dist/ para producción
@@ -388,7 +396,7 @@ git push origin --tags            # Subir tags a GitHub
 
 - Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026**, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador).
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Falta crear el usuario admin desde Authentication → Users y asignarle `role = 'admin'`.
-- **Tests:** 32/32 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
+- **Tests:** 37/37 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
 

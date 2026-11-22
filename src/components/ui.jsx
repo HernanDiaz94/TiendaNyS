@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react';
+import { buildPexelsSrcSet, DEFAULT_IMAGE_SIZES } from '../lib/imageUrls.js';
 
-export function ProductImage({ src, alt, className = '', eager = false }) {
+export function ProductImage({
+  src,
+  alt,
+  className = '',
+  eager = false,
+  sizes = DEFAULT_IMAGE_SIZES,
+  srcSet,
+  fallbackSrc,
+}) {
+  const [currentSrc, setCurrentSrc] = useState(src);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    setCurrentSrc(src);
     setFailed(false);
   }, [src]);
 
-  if (!src || failed) {
+  if (!currentSrc || failed) {
     return (
       <span className={`img-fallback ${className}`} role="img" aria-label={alt}>
         <span aria-hidden="true">N&amp;S</span>
@@ -15,14 +26,25 @@ export function ProductImage({ src, alt, className = '', eager = false }) {
     );
   }
 
+  const handleError = () => {
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      setCurrentSrc(fallbackSrc);
+      return;
+    }
+    setFailed(true);
+  };
+
   return (
     <img
       className={className}
-      src={src}
+      src={currentSrc}
       alt={alt}
+      srcSet={srcSet ?? buildPexelsSrcSet(currentSrc)}
+      sizes={sizes}
       loading={eager ? 'eager' : 'lazy'}
+      fetchPriority={eager ? 'high' : undefined}
       decoding="async"
-      onError={() => setFailed(true)}
+      onError={handleError}
     />
   );
 }

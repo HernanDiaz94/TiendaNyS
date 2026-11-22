@@ -60,7 +60,12 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
           </button>
 
           <div className="pdp-media">
-            <ProductImage src={product.image_url} alt={product.name} eager />
+            <ProductImage
+              src={product.image_url}
+              alt={product.name}
+              sizes="(max-width: 899px) 100vw, 50vw"
+              eager
+            />
             {product.featured && <span className="badge badge--fav pdp-badge">Favorito</span>}
           </div>
 

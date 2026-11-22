@@ -14,12 +14,14 @@ export function Story({ instagramUrl, handle }) {
             <ProductImage
               src={STORY_MAIN}
               alt="Valle y cerros de los Andes en Catamarca, Argentina"
+              sizes="(max-width: 900px) 100vw, 46vw"
             />
           </figure>
           <figure className="story-detail">
             <ProductImage
               src={STORY_DETAIL}
               alt="Ruta entre cerros rojos de Fiambalá, Catamarca"
+              sizes="(max-width: 900px) 42vw, 18vw"
             />
           </figure>
           <span className="story-stamp" aria-hidden="true">CTA<br />EST. 2025</span>

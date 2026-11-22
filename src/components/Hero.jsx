@@ -1,8 +1,15 @@
 import { ArrowDownRight, ArrowRight, MapPin, Package, ShieldCheck } from 'lucide-react';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
-// Imagen principal del hero: Drop 01 2026 (archivo local en /public).
-const HERO_IMAGE = '/drop-01-2026.jpg';
+// Imagen principal del hero: Drop 01 2026 (WebP local con fallback JPG).
+const HERO_IMAGE = '/drop-01-2026.webp';
+const HERO_IMAGE_FALLBACK = '/drop-01-2026.jpg';
+const HERO_IMAGE_SRCSET = [
+  '/drop-01-2026-640.webp 640w',
+  '/drop-01-2026-1000.webp 1000w',
+  '/drop-01-2026.webp 1337w',
+].join(', ');
+const HERO_SIZES = '(max-width: 959px) 100vw, 52vw';
 const HERO_DETAIL = 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Vista_a%C3%A9rea_de_San_Fernando_del_Valle_de_Catamarca%2C_Argentina.jpg';
 
 const MARQUEE_ITEMS = [
@@ -68,7 +75,10 @@ export function Hero({ whatsappUrl, instagramUrl }) {
           <figure className="hero-main">
             <ProductImage
               src={HERO_IMAGE}
+              fallbackSrc={HERO_IMAGE_FALLBACK}
+              srcSet={HERO_IMAGE_SRCSET}
               alt="Colección Drop 01 2026 de NyS Indumentaria"
+              sizes={HERO_SIZES}
               eager
             />
           </figure>
@@ -76,6 +86,7 @@ export function Hero({ whatsappUrl, instagramUrl }) {
             <ProductImage
               src={HERO_DETAIL}
               alt="Vista aérea de San Fernando del Valle de Catamarca, Argentina"
+              sizes="(max-width: 959px) 38vw, 20vw"
               eager
             />
           </figure>

@@ -657,7 +657,12 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                       className={`product-row ${isOut ? 'is-out' : ''} ${isInactive ? 'is-inactive' : ''}`}
                       key={product.id}
                     >
-                      <ProductImage src={product.image_url} alt={product.name} className="admin-thumb" />
+                      <ProductImage
+                        src={product.image_url}
+                        alt={product.name}
+                        className="admin-thumb"
+                        sizes="72px"
+                      />
 
                       <div className="product-row-main">
                         <strong>{product.name}</strong>

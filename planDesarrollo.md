@@ -156,6 +156,15 @@ Reemplazadas por paisajes de **Catamarca, Argentina** (Pexels, uso libre):
 
 ---
 
+## 🔎 SEO
+
+### Etapa 1 — SEO base (22/11/2026)
+- `public/robots.txt`: permite todo el sitio, bloquea `/admin` y apunta al sitemap.
+- `public/sitemap.xml`: incluye la home (la etapa 2 agrega una URL por producto).
+- `index.html`: `canonical`, `og:url` y JSON-LD con `ClothingStore` (nombre, teléfono, dirección de Valle Chico e Instagram).
+
+---
+
 ## 🔧 Variables de Entorno
 
 ### `.env` (local)

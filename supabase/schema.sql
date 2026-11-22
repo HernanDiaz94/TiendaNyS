@@ -348,3 +348,29 @@ end;
 $$;
 revoke all on function public.register_purchase(uuid, integer, numeric, text, timestamptz) from public, anon;
 grant execute on function public.register_purchase(uuid, integer, numeric, text, timestamptz) to authenticated;
+
+-- Login alternativo con nombre de usuario (alias del correo del administrador).
+alter table public.profiles add column if not exists username text;
+
+create unique index if not exists profiles_username_lower_key
+  on public.profiles (lower(username))
+  where username is not null;
+
+create or replace function public.resolve_admin_username(p_username text)
+returns text
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, auth
+as $$
+  select lower(u.email)
+  from public.profiles p
+  join auth.users u on u.id = p.user_id
+  where p.role = 'admin'
+    and p.username is not null
+    and lower(btrim(p.username)) = lower(btrim(p_username))
+  limit 1;
+$$;
+
+revoke all on function public.resolve_admin_username(text) from public;
+grant execute on function public.resolve_admin_username(text) to anon, authenticated;

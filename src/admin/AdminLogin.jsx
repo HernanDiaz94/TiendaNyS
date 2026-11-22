@@ -108,7 +108,7 @@ export function AdminLogin({ onLogin, onSignUp, isDemo }) {
           <h2>{mode === 'login' ? 'Hola de nuevo.' : 'Crear cuenta.'}</h2>
           <p className="login-lede">
             {mode === 'login'
-              ? 'Ingresá con tu correo registrado o con el usuario de la tienda.'
+              ? 'Ingresá con tu correo, tu usuario admin o el usuario de la tienda.'
               : 'Registrá un correo (puede ser Gmail) para dar acceso al panel.'}
           </p>
 
@@ -129,7 +129,7 @@ export function AdminLogin({ onLogin, onSignUp, isDemo }) {
                   autoComplete="username"
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
-                  placeholder={isDemo ? 'admin o tu@correo.com' : 'tu@correo.com'}
+                  placeholder={isDemo ? 'admin o tu@correo.com' : 'tu@correo.com o tu usuario'}
                   data-autofocus
                 />
               </div>

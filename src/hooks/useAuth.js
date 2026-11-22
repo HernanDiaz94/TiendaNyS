@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { INVALID_LOGIN_MESSAGE, resolveLoginEmail } from '../lib/authUsername.js';
 import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 const DEMO_SESSION_KEY = 'nys-demo-session';
@@ -117,15 +118,20 @@ export function useAuth() {
       return demoSession;
     }
 
+    const loginEmail = await resolveLoginEmail(value, async (username) => {
+      const { data: resolved, error: lookupError } = await supabase.rpc(
+        'resolve_admin_username',
+        { p_username: username },
+      );
+      if (lookupError) throw new Error(INVALID_LOGIN_MESSAGE);
+      return resolved;
+    });
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: value,
+      email: loginEmail,
       password,
     });
-    if (error) {
-      throw new Error(
-        'No pudimos iniciar sesión. Revisá el correo y la contraseña, y confirmá que tu usuario tenga rol admin.',
-      );
-    }
+    if (error) throw new Error(INVALID_LOGIN_MESSAGE);
     setSession(data.session);
     return data.session;
   }, [isDemo]);

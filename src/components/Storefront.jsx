@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
 import { buildWhatsAppUrl, cartCount, cartTotal, formatPrice } from '../lib/shop.js';
+import {
+  buildProductSlugMap,
+  productPath,
+  productSeoMeta,
+  slugFromPath,
+} from '../lib/productSeo.js';
 import { useCatalog } from '../hooks/useCatalog.js';
 import { useCart } from '../hooks/useCart.js';
 import { Header } from './Header.jsx';
@@ -27,9 +33,11 @@ export function Storefront() {
   } = useCart();
 
   const [selectedId, setSelectedId] = useState(null);
+  const [routeSlug, setRouteSlug] = useState(() => slugFromPath(window.location.pathname));
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const searchRef = useRef(null);
+  const pushedProductRef = useRef(false);
 
   const handle = String(import.meta.env.VITE_INSTAGRAM_HANDLE || FALLBACK_HANDLE)
     .replace(/^@+/, '')
@@ -48,6 +56,7 @@ export function Storefront() {
   const selectedProduct = selectedId
     ? catalog.products.find((product) => product.id === selectedId) || null
     : null;
+  const slugMap = useMemo(() => buildProductSlugMap(catalog.products), [catalog.products]);
 
   const notify = useCallback((message, action = null) => {
     setToast({ id: Date.now(), message, action });
@@ -62,6 +71,49 @@ export function Storefront() {
   useEffect(() => {
     if (catalog.products.length > 0) reconcile(catalog.products);
   }, [catalog.products, reconcile]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      pushedProductRef.current = false;
+      setRouteSlug(slugFromPath(window.location.pathname));
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (!routeSlug) {
+      setSelectedId(null);
+      return;
+    }
+    const match = slugMap.get(routeSlug);
+    if (match) setSelectedId(match.id);
+  }, [routeSlug, slugMap]);
+
+  useEffect(() => {
+    if (routeSlug && !selectedProduct) return;
+    document.title = selectedProduct
+      ? productSeoMeta(selectedProduct, catalog.products).title
+      : 'NyS Indumentaria — Básicos con actitud';
+  }, [selectedProduct, catalog.products, routeSlug]);
+
+  const openProduct = useCallback((product) => {
+    const path = productPath(product, catalog.products);
+    window.history.pushState({ nysProduct: product.id }, '', path);
+    pushedProductRef.current = true;
+    setRouteSlug(slugFromPath(path));
+    setSelectedId(product.id);
+  }, [catalog.products]);
+
+  const closeProduct = useCallback(() => {
+    if (slugFromPath(window.location.pathname)) {
+      if (pushedProductRef.current) window.history.pushState({}, '', '/');
+      else window.history.replaceState({}, '', '/');
+    }
+    pushedProductRef.current = false;
+    setRouteSlug(null);
+    setSelectedId(null);
+  }, []);
 
   const handleAdd = useCallback((product, size, quantity = 1) => {
     const status = add(product, size, quantity);
@@ -117,7 +169,7 @@ export function Storefront() {
           loading={catalog.loading}
           error={catalog.error}
           onRetry={() => catalog.refresh()}
-          onOpen={(product) => setSelectedId(product.id)}
+          onOpen={openProduct}
           onAdd={handleAdd}
           searchRef={searchRef}
         />
@@ -129,7 +181,7 @@ export function Storefront() {
 
       <ProductModal
         product={selectedProduct}
-        onClose={() => setSelectedId(null)}
+        onClose={closeProduct}
         onAdd={handleAdd}
         whatsappNumber={whatsappNumber}
         instagramUrl={instagramUrl}

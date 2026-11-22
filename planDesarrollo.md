@@ -179,7 +179,7 @@ VITE_INSTAGRAM_HANDLE=nys_indumentaria_25
 
 La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` (o la legacy `VITE_SUPABASE_ANON_KEY`) están definidos, deja de usar `localStorage` y pasa a leer/escribir en la base (`isSupabaseConfigured` en `src/lib/supabase.js`). Si se borran las variables, vuelve al modo demo.
 
-**Estado: conectado y deployado el 21/11/2026.** El esquema se ejecutó con éxito, el catálogo responde 12 productos desde `rest/v1/products` y Vercel tiene las dos variables en Production, Preview y Development. `.env` dejó de versionarse (commit `64487bd`). Falta únicamente crear el usuario admin desde el dashboard para acceder a `/admin`.
+**Estado: conectado y deployado el 21/11/2026; login admin verificado el 22/11/2026.** El esquema se ejecutó con éxito, el catálogo responde 12 productos desde `rest/v1/products` y Vercel tiene las dos variables en Production, Preview y Development. `.env` dejó de versionarse (commit `64487bd`). El usuario `hernan.diiaz@gmail.com` tiene rol `admin` y ya ingresó a `/admin`.
 
 **Pasos para dejarlo andando:**
 
@@ -339,8 +339,8 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [x] **Fecha de compra de producto:** Fecha de ingreso por artículo y por lote
 - [x] **Alerta de inventario antiguo:** Aviso para productos con más de 6 meses en inventario
 
-**Pendiente del usuario (Hernán):**
-- [ ] Crear el usuario admin en **Supabase → Authentication → Users** y ejecutar el `insert into public.profiles ... role = 'admin'`. Hasta entonces `/admin` no permitirá ingresar con Supabase activo.
+**Usuario admin Supabase (completado 22/11/2026):**
+- [x] Usuario `hernan.diiaz@gmail.com` creado en **Supabase → Authentication → Users** con contraseña, rol `admin` asignado en `public.profiles` y login verificado en `/admin`. Ya no aplican las credenciales demo (`admin` / `nys-demo`) mientras Supabase esté activo.
 
 ### Otras mejoras
 - [x] Conectar Supabase para persistencia real de datos (21/11/2026)
@@ -396,7 +396,7 @@ git push origin --tags            # Subir tags a GitHub
 ## ✅ Estado actual (22 de Noviembre, 2026)
 
 - Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading y hero WebP (-79% vs JPG).
-- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Falta crear el usuario admin desde Authentication → Users y asignarle `role = 'admin'`.
+- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin`.
 - **Tests:** 37/37 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.

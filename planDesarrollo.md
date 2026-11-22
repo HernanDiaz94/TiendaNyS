@@ -315,6 +315,11 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - **Causa:** Créditos de deploy agotados
 - **Solución:** Migrar a Vercel (gratis, ilimitado)
 
+### 9. Acentos corruptos en Supabase (`MarrÃ³n`, `PantalÃ³n`, `Ãšnico`)
+- **Causa:** El `schema.sql` se copió al portapapeles con `Get-Content` sin `-Encoding UTF8`. Windows PowerShell lo decodificó como ANSI (Windows-1252) y los bytes UTF-8 se guardaron doble-codificados en la base. Afectaba a 10 de 12 productos (nombre, descripción, color y talles).
+- **Solución:** `supabase/fix-encoding.sql` (ASCII-only) usa `convert_from(convert_to(valor, 'WIN1252'), 'UTF8')` solo donde detecta `chr(195)`. Verificado: 0 filas con acentos corruptos y `Botitas Sur · Marrón` correcto en API y en la web.
+- **Prevención:** copiar SQL con acentos usando `Get-Content supabase\schema.sql -Raw -Encoding UTF8 | Set-Clipboard`.
+
 ---
 
 ## 🎯 Pendientes / Ideas Futuras

@@ -35,7 +35,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Modalidad de entrega en dos tarjetas separadas: **Retiro en el local** y **Envíos dentro de Catamarca** (también en el mensaje de WhatsApp y en el checkout de la bolsa)
 - [x] Checkout sin DNI: solo Nombre y WhatsApp
 - [x] Checkout por WhatsApp (mensaje con nombre, talle, cantidad y precio por producto)
-- [x] Hero section con foto real de Valle Chico y sticker "DROP 01"
+- [x] Hero section con foto real de Valle Chico y sticker "DROP 01" (dato de envíos: "Dentro de Catamarca")
 - [x] Sección "Nosotros" (Story) con stamp "CTA EST. 2025"
 - [x] Footer con dirección (ícono de ubicación), horarios separados y WhatsApp
 - [x] Marquee animado
@@ -62,7 +62,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Dirección: Calle 24 esquina 45, Casa 212
 - [x] Horarios: 10:00 a 14:00 y de 18:00 a 22:00
 - [x] WhatsApp: +54 9 3834 19-8148
-- [x] Envíos: "Realizamos envíos con recargo"
+- [x] Envíos: "Realizamos envíos dentro de Catamarca con recargo"
 - [x] Story stamp: "CTA EST. 2025"
 
 ---
@@ -273,6 +273,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `d8824be` | fix(copy): envíos dentro de Catamarca en el hero |
 | `e043789` | fix(copy): envíos dentro de Catamarca en modal y checkout |
 | `50a246e` | feat(pdp): separar opciones de retiro y envío en el modal |
 | `8297300` | style(size-guides): centrar celdas de la tabla de talles |

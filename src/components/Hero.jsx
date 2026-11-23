@@ -58,7 +58,7 @@ export function Hero({ whatsappUrl, instagramUrl }) {
           <dl className="hero-facts">
             <div>
               <dt><Package size={15} aria-hidden="true" /> Envíos</dt>
-              <dd>A todo el país</dd>
+              <dd>Dentro de Catamarca</dd>
             </div>
             <div>
               <dt><ShieldCheck size={15} aria-hidden="true" /> Sin cuenta</dt>

@@ -16,5 +16,5 @@ export const SITE = {
   // Medios de pago
   mediosPago: 'Efectivo, transferencia, MercadoPago',
   // Envíos
-  envios: 'Realizamos envíos con recargo',
+  envios: 'Realizamos envíos dentro de Catamarca con recargo',
 };

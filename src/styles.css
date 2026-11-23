@@ -2446,6 +2446,147 @@ a {
   color: #fff;
 }
 
+.size-guide {
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.size-guide summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  list-style: none;
+}
+
+.size-guide summary::-webkit-details-marker {
+  display: none;
+}
+
+.size-guide summary::after {
+  content: '+';
+  margin-left: auto;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.size-guide[open] summary::after {
+  content: '\2212';
+}
+
+.size-guide-scroll {
+  max-height: 210px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+}
+
+.size-guide table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.size-guide th,
+.size-guide td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.size-guide thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.size-guide tbody th {
+  font-weight: 700;
+}
+
+.size-guide-note {
+  padding: 9px 12px 11px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.size-guide-editor {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.size-guide-editor > summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.size-guide-editor-scroll {
+  max-height: 220px;
+  margin: 10px 0;
+  overflow: auto;
+}
+
+.size-guide-editor table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.size-guide-editor th {
+  padding: 4px;
+  color: var(--muted);
+  font-size: 8px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.size-guide-editor td {
+  padding: 3px;
+}
+
+.size-guide-editor input,
+.size-guide-editor textarea {
+  width: 100%;
+  min-width: 62px;
+  padding: 5px 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 10px;
+}
+
+.size-guide-editor-note {
+  display: block;
+  margin: 8px 0;
+}
+
+.size-guide-editor-note span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
 .pdp-buy {
   display: flex;
   gap: 8px;

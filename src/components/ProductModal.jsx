@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Check, Minus, Plus, RefreshCw, ShoppingBag, Truck, X } from 'lucide-react';
+import { ArrowRight, Check, Minus, Plus, RefreshCw, Ruler, ShoppingBag, Truck, X } from 'lucide-react';
 
 import { buildWhatsAppUrl, formatPrice } from '../lib/shop.js';
 import { sortSizes, stockState } from '../lib/products.js';
+import { resolveSizeGuide } from '../lib/sizeGuides.js';
 import { Modal } from './Modal.jsx';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
 
@@ -11,6 +12,8 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
     const list = product?.sizes?.length ? product.sizes : ['Único'];
     return sortSizes(list);
   }, [product]);
+
+  const sizeGuide = useMemo(() => resolveSizeGuide(product), [product]);
 
   const [size, setSize] = useState(sizes[0] || 'Único');
   const [quantity, setQuantity] = useState(1);
@@ -106,6 +109,40 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
                 ))}
               </div>
             </div>
+
+            {sizeGuide && (
+              <details className="size-guide">
+                <summary>
+                  <Ruler size={15} aria-hidden="true" />
+                  Guía de talles · {sizeGuide.label}
+                </summary>
+                {sizeGuide.rows.length > 0 && (
+                  <div className="size-guide-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Talle</th>
+                          {sizeGuide.columns.map((column) => (
+                            <th scope="col" key={column.key}>{column.label}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sizeGuide.rows.map((row) => (
+                          <tr key={row.size}>
+                            <th scope="row">{row.size}</th>
+                            {sizeGuide.columns.map((column) => (
+                              <td key={column.key}>{row.values[column.key] || '—'}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {sizeGuide.note && <p className="size-guide-note">{sizeGuide.note}</p>}
+              </details>
+            )}
 
             <div className="pdp-buy">
               <div className="stepper" role="group" aria-label="Cantidad">

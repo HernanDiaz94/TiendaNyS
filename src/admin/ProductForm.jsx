@@ -11,6 +11,7 @@ import {
   validateProduct,
 } from '../lib/products.js';
 import { uploadProductImage } from '../lib/images.js';
+import { SIZE_GUIDE_CHOICES, createSizeGuide } from '../lib/sizeGuides.js';
 import { Modal } from '../components/Modal.jsx';
 import { ErrorNote, Notice, ProductImage, Spinner } from '../components/ui.jsx';
 
@@ -84,6 +85,37 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
     }
     setCustomSize('');
     setErrors((current) => ({ ...current, sizes: undefined }));
+  };
+
+  const setGuideKey = (key) => {
+    setDraft((current) => ({
+      ...current,
+      size_guide_key: key,
+      size_measurements: createSizeGuide(key),
+    }));
+    setErrors((current) => ({ ...current, size_guide: undefined }));
+  };
+
+  const setGuideRow = (rowIndex, field, value) => {
+    setDraft((current) => {
+      if (!current.size_measurements) return current;
+      const rows = current.size_measurements.rows.map((row, index) => (
+        index === rowIndex
+          ? field === 'size'
+            ? { ...row, size: value }
+            : { ...row, values: { ...row.values, [field]: value } }
+          : row
+      ));
+      return { ...current, size_measurements: { ...current.size_measurements, rows } };
+    });
+  };
+
+  const setGuideNote = (note) => {
+    setDraft((current) => (
+      current.size_measurements
+        ? { ...current, size_measurements: { ...current.size_measurements, note } }
+        : current
+    ));
   };
 
   const handleFile = async (event) => {
@@ -269,6 +301,88 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
               </div>
               {draft.sizes.length > 0 && (
                 <p className="field-hint">Seleccionados: {draft.sizes.join(' · ')}</p>
+              )}
+            </FormField>
+
+            <FormField
+              id="product-size_guide"
+              label="Guía de talles"
+              error={errors.size_guide}
+              hint="Se muestra desplegada en la ficha del producto. Podés ajustar los valores después."
+              optional
+              full
+            >
+              <select
+                id="product-size_guide"
+                value={draft.size_guide_key}
+                onChange={(event) => setGuideKey(event.target.value)}
+                aria-invalid={Boolean(errors.size_guide)}
+              >
+                {SIZE_GUIDE_CHOICES.map((choice) => (
+                  <option key={choice.value} value={choice.value}>{choice.label}</option>
+                ))}
+              </select>
+
+              {draft.size_measurements && (
+                <details className="size-guide-editor">
+                  <summary>Editar medidas y nota</summary>
+                  {draft.size_measurements.rows.length > 0 ? (
+                    <div className="size-guide-editor-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Talle</th>
+                            {draft.size_measurements.columns.map((column) => (
+                              <th scope="col" key={column.key}>{column.label}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {draft.size_measurements.rows.map((row, rowIndex) => (
+                            <tr key={`${row.size}-${rowIndex}`}>
+                              <td>
+                                <input
+                                  aria-label={`Talle fila ${rowIndex + 1}`}
+                                  maxLength={12}
+                                  value={row.size}
+                                  onChange={(event) => setGuideRow(rowIndex, 'size', event.target.value)}
+                                />
+                              </td>
+                              {draft.size_measurements.columns.map((column) => (
+                                <td key={column.key}>
+                                  <input
+                                    aria-label={`${column.label} talle ${row.size}`}
+                                    maxLength={30}
+                                    value={row.values[column.key] || ''}
+                                    onChange={(event) => setGuideRow(rowIndex, column.key, event.target.value)}
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="field-hint">Esta guía no tiene tabla: solo se muestra la nota.</p>
+                  )}
+                  <label className="size-guide-editor-note">
+                    <span>Nota</span>
+                    <textarea
+                      maxLength={240}
+                      rows={2}
+                      value={draft.size_measurements.note}
+                      onChange={(event) => setGuideNote(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    onClick={() => setField('size_measurements', createSizeGuide(draft.size_guide_key))}
+                  >
+                    Restablecer valores genéricos
+                  </button>
+                </details>
               )}
             </FormField>
 

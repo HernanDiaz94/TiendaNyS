@@ -1,3 +1,10 @@
+import {
+  guideKeyForCategory,
+  isSizeGuideKey,
+  normalizeSizeGuide,
+  validateSizeGuide,
+} from './sizeGuides.js';
+
 export const CATEGORIES = [
   'Remeras',
   'Camisas',
@@ -186,6 +193,9 @@ export function validateProduct(values, options = {}) {
     }
   }
 
+  const guideError = validateSizeGuide(values?.size_measurements);
+  if (guideError) errors.size_guide = guideError;
+
   return errors;
 }
 
@@ -199,6 +209,8 @@ export function normalizeProductDraft(values) {
     price: Math.round(Number(values?.price) * 100) / 100,
     stock: Math.trunc(Number(values?.stock)),
     sizes: parseSizes(values?.sizes),
+    size_guide_key: isSizeGuideKey(values?.size_guide_key) ? values.size_guide_key : '',
+    size_measurements: normalizeSizeGuide(values?.size_measurements),
     featured: Boolean(values?.featured),
     is_active: values?.is_active !== false,
   };
@@ -214,6 +226,10 @@ export function productDraftFrom(product) {
     price: product?.price ?? '',
     stock: product?.stock ?? 0,
     sizes: Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['Único'],
+    size_guide_key: isSizeGuideKey(product?.size_guide_key)
+      ? product.size_guide_key
+      : guideKeyForCategory(product?.category),
+    size_measurements: normalizeSizeGuide(product?.size_measurements),
     featured: Boolean(product?.featured),
     is_active: product?.is_active !== false,
   };
@@ -229,6 +245,8 @@ export function emptyProductDraft() {
     price: '',
     stock: 0,
     sizes: ['S', 'M', 'L'],
+    size_guide_key: '',
+    size_measurements: null,
     featured: false,
     is_active: true,
   };

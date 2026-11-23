@@ -1,3 +1,5 @@
+import { guideKeyForCategory } from '../lib/sizeGuides.js';
+
 const daysAgo = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
 /**
@@ -7,7 +9,7 @@ const daysAgo = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toIS
  * Las fotos son de Pexels (uso comercial libre) y buscan una estética de
  * tonos tierra, lana y cuero cercana a la indumentaria del noroeste argentino.
  */
-export const demoProducts = [
+const rawProducts = [
   {
     id: 'nys-001',
     name: 'Campera Siena',
@@ -179,3 +181,9 @@ export const demoProducts = [
     created_at: daysAgo(13),
   },
 ];
+
+// La guía genérica se asigna por categoría; el admin puede cambiarla por producto.
+export const demoProducts = rawProducts.map((product) => ({
+  ...product,
+  size_guide_key: guideKeyForCategory(product.category),
+}));

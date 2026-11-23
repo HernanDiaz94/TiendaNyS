@@ -22,6 +22,19 @@ create table if not exists public.products (
 alter table public.products add column if not exists purchased_at timestamptz;
 update public.products set purchased_at = created_at where purchased_at is null;
 
+-- Guia de talles: clave generica por categoria + override editable (jsonb).
+alter table public.products add column if not exists size_guide_key text;
+alter table public.products add column if not exists size_measurements jsonb;
+update public.products
+set size_guide_key = case
+  when lower(category) = 'calzado' then 'calzado'
+  when lower(category) = 'pantalones' then 'inferior'
+  when lower(category) in ('remeras', 'camisas', 'abrigos') then 'superior'
+  when lower(category) = 'accesorios' then 'unico'
+  else ''
+end
+where size_guide_key is null;
+
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   role text not null default 'customer' check (role in ('admin', 'customer')),

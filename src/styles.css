@@ -2498,7 +2498,7 @@ a {
 .size-guide td {
   padding: 6px 8px;
   border-bottom: 1px solid var(--line);
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
 }
 

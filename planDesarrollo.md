@@ -32,7 +32,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Carrito de compras (localStorage)
 - [x] Modal de producto con detalles
 - [x] Guía de talles desplegable en el modal (calzado, superior, inferior y único)
-- [x] Modalidad de entrega en dos tarjetas separadas (retiro en el local / envío o cadetería)
+- [x] Modalidad de entrega en dos tarjetas separadas: **Retiro en el local** y **Envíos dentro de Catamarca** (también en el mensaje de WhatsApp y en el checkout de la bolsa)
 - [x] Checkout sin DNI: solo Nombre y WhatsApp
 - [x] Checkout por WhatsApp (mensaje con nombre, talle, cantidad y precio por producto)
 - [x] Hero section con foto real de Valle Chico y sticker "DROP 01"
@@ -273,6 +273,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `e043789` | fix(copy): envíos dentro de Catamarca en modal y checkout |
 | `50a246e` | feat(pdp): separar opciones de retiro y envío en el modal |
 | `8297300` | style(size-guides): centrar celdas de la tabla de talles |
 | `02c36ec` | feat(size-guides): guía de talles por categoría en la ficha del producto |

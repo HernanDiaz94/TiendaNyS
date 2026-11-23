@@ -32,7 +32,7 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
   const inquiryUrl = product
     ? buildWhatsAppUrl(
       whatsappNumber,
-      `Hola! Me interesa ${product.name}${selectedSize !== 'Único' ? ` (talle ${selectedSize})` : ''} a ${formatPrice(product.price)}. ${modalidad === 'retiro' ? 'Retiro en el local' : 'Envío / cadetería en CATAMARCA'}. ¿Está disponible?`,
+      `Hola! Me interesa ${product.name}${selectedSize !== 'Único' ? ` (talle ${selectedSize})` : ''} a ${formatPrice(product.price)}. ${modalidad === 'retiro' ? 'Retiro en el local' : 'Envíos dentro de Catamarca'}. ¿Está disponible?`,
     )
     : null;
 
@@ -173,8 +173,8 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
                   <span className="pdp-modalidad-radio" aria-hidden="true" />
                   <Truck size={16} aria-hidden="true" />
                   <span className="pdp-modalidad-copy">
-                    <strong>Envío / cadetería</strong>
-                    <small>A todo el país</small>
+                    <strong>Envíos dentro de Catamarca</strong>
+                    <small>Cadetería local</small>
                   </span>
                 </label>
               </div>

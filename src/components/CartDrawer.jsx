@@ -345,7 +345,7 @@ export function CartDrawer({
                       checked={modalidad === 'envio'}
                       onChange={() => setModalidad('envio')}
                     />
-                    Envío / cadetería en Catamarca
+                    Envíos dentro de Catamarca
                   </label>
                 </div>
               </Field>

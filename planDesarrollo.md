@@ -31,6 +31,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Filtros por categoría, talle y búsqueda
 - [x] Carrito de compras (localStorage)
 - [x] Modal de producto con detalles
+- [x] Guía de talles desplegable en el modal (calzado, superior, inferior y único)
 - [x] Checkout sin DNI: solo Nombre y WhatsApp
 - [x] Checkout por WhatsApp (mensaje con nombre, talle, cantidad y precio por producto)
 - [x] Hero section con foto real de Valle Chico y sticker "DROP 01"
@@ -51,6 +52,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Las compras suman stock automáticamente y quedan en el historial
 - [x] Fecha de ingreso visible en cada artículo del catálogo
 - [x] Alerta y filtro de artículos con más de 6 meses en inventario
+- [x] Editor de guía de talles por producto (elegí el tipo y ajustá medidas/nota)
 
 ### Adaptaciones a Catamarca
 - [x] Texto "CATAMARCA" en todo el sitio
@@ -84,7 +86,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/components/Story.jsx` | Sección "Nosotros" con stamp "CTA" |
 | `src/components/Footer.jsx` | Footer con dirección, horarios, WhatsApp |
 | `src/components/Catalog.jsx` | Catálogo de productos con filtros |
-| `src/components/ProductModal.jsx` | Modal de detalle de producto |
+| `src/components/ProductModal.jsx` | Modal de detalle de producto, con guía de talles desplegable |
 | `src/components/CartDrawer.jsx` | Carrito de compras lateral |
 | `src/components/Header.jsx` | Header con búsqueda y navegación |
 | `src/components/ui.jsx` | Componentes UI (ProductImage, etc.) |
@@ -92,7 +94,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 ### Datos
 | Archivo | Descripción |
 |---------|-------------|
-| `src/data/demoProducts.js` | 12 productos con imágenes Pexels (estética andina) |
+| `src/data/demoProducts.js` | 12 productos con imágenes Pexels (estética andina) y guía por categoría |
+| `src/lib/sizeGuides.js` | Guías genéricas, normalización y resolución por producto |
 | `src/lib/demoStore.js` | Persistencia demo; migra fotos viejas de Unsplash y URLs reemplazadas a las nuevas |
 
 ### Admin
@@ -191,6 +194,26 @@ Se eligió **Vercel Web Analytics** (no GA4): no necesita ID de medición, no us
 
 ---
 
+## 📏 Guía de talles (22/11/2026)
+
+Se agregó una guía **genérica por categoría**, sin inventar medidas propias:
+
+| Categoría | Guía | Columnas |
+|-----------|------|----------|
+| Calzado | `calzado` | AR, BR, US, EU y plantilla en cm (36 al 44) |
+| Remeras, Camisas, Abrigos | `superior` | pecho, cintura y largo (XS a XXL) |
+| Pantalones | `inferior` | cintura, cadera y largo (XS a XXL) |
+| Accesorios | `unico` | solo nota de talle único |
+
+- En la tienda aparece como un bloque desplegable **"Guía de talles · <tipo>"** dentro del modal, entre los talles y el botón de compra. Es un `<details>`: no ocupa espacio si no se abre y la tabla tiene encabezado fijo y scroll.
+- Prioridad de resolución (`src/lib/sizeGuides.js`): medidas editables guardadas en Supabase → `size_guide_key` asignado → inferencia por categoría. Si no hay categoría conocida, el bloque no se muestra.
+- En el admin, el formulario de producto tiene un selector de guía y un editor de medidas/nota con valores genéricos cargados y un botón **"Restablecer valores genéricos"**. El botón de restablecer usa copias frescas para no mutar la plantilla.
+- Los datos viajan en `products.size_guide_key` (texto) y `products.size_measurements` (jsonb). Todo se sanitiza antes de renderizar: columnas y filas con límites, claves alfanuméricas y textos recortados.
+- **Verificado en producción:** `/producto/botitas-sur/` muestra la guía de calzado con 9 filas y las 5 columnas esperadas.
+- **Migración pendiente en Supabase:** ejecutar una vez `supabase/add-size-guides.sql` en el SQL Editor (ascii puro, se copia y pega sin problemas). Mientras no se ejecute, la tienda sigue mostrando la guía por categoría y `useCatalog` omite las columnas nuevas al guardar, así que el CRUD del admin no se rompe; recién después de la migración se persisten las ediciones. El bloque también quedó incorporado a `supabase/schema.sql` para instalaciones nuevas.
+
+---
+
 ## 🔧 Variables de Entorno
 
 ### `.env` (local)
@@ -249,6 +272,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `02c36ec` | feat(size-guides): guía de talles por categoría en la ficha del producto |
 | `8740060` | feat(analytics): agregar Vercel Web Analytics a la tienda |
 | `e29b58f` | feat(auth): login admin con nombre de usuario en Supabase |
 | `198fcd5` | feat(seo): páginas estáticas por producto y rutas `/producto` |
@@ -397,6 +421,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Agregar más categorías de productos
 - [x] Optimizar imágenes (WebP, srcset y lazy loading mejorado — 22/11/2026)
 - [x] SEO base + por producto (HTML estático por prenda, JSON-LD y sitemap — 22/11/2026)
+- [x] Guía de talles por categoría en la ficha del producto (22/11/2026; migración SQL pendiente)
 - [ ] Implementar búsqueda avanzada
 - [ ] Agregar sistema de reviews/calificaciones
 - [ ] Configurar dominio personalizado
@@ -420,7 +445,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 54 tests
+npm test             # Ejecuta 62 tests
 
 # Build
 npm run build        # Genera dist/ + 12 páginas SEO de producto (postbuild)
@@ -447,7 +472,8 @@ git push origin --tags            # Subir tags a GitHub
 - **SEO completo:** robots, sitemap con 12 URLs de producto, canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer` para compartir en WhatsApp.
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin` tanto con correo como con el alias **`hernan`** (SQL `add-username-login.sql` ejecutado y RPC verificado).
 - **Analytics:** Vercel Web Analytics habilitado y verificado (excluye `/admin`). Dos visitas de prueba dieron 1 visitante / 2 page views y el desglose por ruta separó `/` de `/producto/botitas-sur`.
-- **Tests:** 54/54 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
+- **Guía de talles:** desplegable en el modal con tablas por categoría y editor en el admin. Verificado en `/producto/botitas-sur/`. Falta ejecutar `supabase/add-size-guides.sql` para persistir las ediciones.
+- **Tests:** 62/62 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
 - Repositorio limpio, sin cambios pendientes (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
 

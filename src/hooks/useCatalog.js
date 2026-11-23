@@ -27,6 +27,16 @@ export function useCatalog({ includeInactive = false } = {}) {
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [error, setError] = useState('');
   const mounted = useRef(true);
+  const supportsSizeGuides = useRef(true);
+
+  // Hasta ejecutar add-size-guides.sql, PostgREST rechaza las columnas nuevas.
+  // En ese caso las omitimos para no romper el CRUD existente; la tienda igual
+  // muestra la guía genérica según la categoría.
+  function withoutSizeGuides(record) {
+    if (supportsSizeGuides.current) return record;
+    const { size_guide_key: _key, size_measurements: _measurements, ...rest } = record;
+    return rest;
+  }
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!isSupabaseConfigured) {
@@ -50,7 +60,17 @@ export function useCatalog({ includeInactive = false } = {}) {
     if (requestError) {
       setError(friendlyError(requestError, 'No pudimos cargar el catálogo. Intentá de nuevo.'));
     } else {
-      setProducts(data || []);
+      const rows = data || [];
+      if (rows.length > 0) {
+        supportsSizeGuides.current = Object.prototype.hasOwnProperty.call(rows[0], 'size_guide_key');
+      } else {
+        const { error: probeError } = await supabase
+          .from('products')
+          .select('size_guide_key')
+          .limit(1);
+        supportsSizeGuides.current = !probeError;
+      }
+      setProducts(rows);
       setError('');
     }
     setLoading(false);
@@ -77,7 +97,7 @@ export function useCatalog({ includeInactive = false } = {}) {
 
     const { data, error: requestError } = await supabase
       .from('products')
-      .insert(record)
+      .insert(withoutSizeGuides(record))
       .select()
       .single();
 
@@ -95,7 +115,7 @@ export function useCatalog({ includeInactive = false } = {}) {
 
     const { data, error: requestError } = await supabase
       .from('products')
-      .update(patch)
+      .update(withoutSizeGuides(patch))
       .eq('id', id)
       .select()
       .single();

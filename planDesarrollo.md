@@ -209,7 +209,7 @@ Se agregó una guía **genérica por categoría**, sin inventar medidas propias:
 - Prioridad de resolución (`src/lib/sizeGuides.js`): medidas editables guardadas en Supabase → `size_guide_key` asignado → inferencia por categoría. Si no hay categoría conocida, el bloque no se muestra.
 - En el admin, el formulario de producto tiene un selector de guía y un editor de medidas/nota con valores genéricos cargados y un botón **"Restablecer valores genéricos"**. El botón de restablecer usa copias frescas para no mutar la plantilla.
 - Los datos viajan en `products.size_guide_key` (texto) y `products.size_measurements` (jsonb). Todo se sanitiza antes de renderizar: columnas y filas con límites, claves alfanuméricas y textos recortados.
-- **Verificado en producción:** `/producto/botitas-sur/` muestra la guía de calzado con 9 filas y las 5 columnas esperadas.
+- **Verificado en producción:** `/producto/botitas-sur/` muestra la guía de calzado con 9 filas y las 5 columnas esperadas. Las celdas de encabezado y datos están centradas (commit `8297300`).
 - **Migración pendiente en Supabase:** ejecutar una vez `supabase/add-size-guides.sql` en el SQL Editor (ascii puro, se copia y pega sin problemas). Mientras no se ejecute, la tienda sigue mostrando la guía por categoría y `useCatalog` omite las columnas nuevas al guardar, así que el CRUD del admin no se rompe; recién después de la migración se persisten las ediciones. El bloque también quedó incorporado a `supabase/schema.sql` para instalaciones nuevas.
 
 ---
@@ -272,6 +272,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `8297300` | style(size-guides): centrar celdas de la tabla de talles |
 | `02c36ec` | feat(size-guides): guía de talles por categoría en la ficha del producto |
 | `8740060` | feat(analytics): agregar Vercel Web Analytics a la tienda |
 | `e29b58f` | feat(auth): login admin con nombre de usuario en Supabase |

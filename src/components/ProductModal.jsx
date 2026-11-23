@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Check, Minus, Plus, RefreshCw, Ruler, ShoppingBag, Truck, X } from 'lucide-react';
+import { ArrowRight, Check, MapPin, Minus, Plus, RefreshCw, Ruler, ShoppingBag, Truck, X } from 'lucide-react';
 
 import { buildWhatsAppUrl, formatPrice } from '../lib/shop.js';
 import { sortSizes, stockState } from '../lib/products.js';
@@ -144,6 +144,42 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
               </details>
             )}
 
+            <div className="pdp-modalidad">
+              <p className="pdp-modalidad-label">Modalidad de entrega</p>
+              <div className="pdp-modalidad-options" role="radiogroup" aria-label="Modalidad de entrega">
+                <label className={`pdp-modalidad-option ${modalidad === 'retiro' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="pdp-modalidad"
+                    value="retiro"
+                    checked={modalidad === 'retiro'}
+                    onChange={() => setModalidad('retiro')}
+                  />
+                  <span className="pdp-modalidad-radio" aria-hidden="true" />
+                  <MapPin size={16} aria-hidden="true" />
+                  <span className="pdp-modalidad-copy">
+                    <strong>Retiro en el local</strong>
+                    <small>Valle Chico · Catamarca</small>
+                  </span>
+                </label>
+                <label className={`pdp-modalidad-option ${modalidad === 'envio' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="pdp-modalidad"
+                    value="envio"
+                    checked={modalidad === 'envio'}
+                    onChange={() => setModalidad('envio')}
+                  />
+                  <span className="pdp-modalidad-radio" aria-hidden="true" />
+                  <Truck size={16} aria-hidden="true" />
+                  <span className="pdp-modalidad-copy">
+                    <strong>Envío / cadetería</strong>
+                    <small>A todo el país</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
             <div className="pdp-buy">
               <div className="stepper" role="group" aria-label="Cantidad">
                 <button
@@ -163,30 +199,6 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
                 >
                   <Plus size={15} aria-hidden="true" />
                 </button>
-              </div>
-
-              <div className="pdp-modalidad">
-                <p className="pdp-modalidad-label">Modalidad</p>
-                <label>
-                  <input
-                    type="radio"
-                    name="pdp-modalidad"
-                    value="retiro"
-                    checked={modalidad === 'retiro'}
-                    onChange={() => setModalidad('retiro')}
-                  />
-                  Retiro en el local
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="pdp-modalidad"
-                    value="envio"
-                    checked={modalidad === 'envio'}
-                    onChange={() => setModalidad('envio')}
-                  />
-                  Envío / cadetería
-                </label>
               </div>
 
               <button

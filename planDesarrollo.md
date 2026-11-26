@@ -230,8 +230,8 @@ Se agregó una guía **genérica por categoría**, sin inventar medidas propias:
 - `src/lib/products.js` centraliza `normalizeAudience`, `normalizeAudienceFilter` y el filtrado; `useCatalog` detecta si la columna existe y la omite al guardar si la migración aún no se ejecutó, para no romper el CRUD.
 - **Categoría nueva `Ropa interior`** con 3 ejemplos: `Boxer Tierra` (hombre), `Bombachón Arena` (mujer) y `Pack Básico x3` (unisex). Fotos Pexels revisadas, aptas para un catálogo familiar (prendas dobladas o sobre textiles, sin modelos en ropa interior).
 - **Guía propia** `interior` con columnas cintura / cadera / AR, talles XS a XXL.
-- **Migración pendiente:** `supabase/add-audience-and-underwear.sql` (ASCII-only e idempotente). La ejecuta el usuario en el SQL Editor. Hasta entonces Supabase muestra 12 productos y todo se trata como unisex; el modo demo ya muestra los 15.
-- **Verificado:** 65/65 tests, build y postbuild OK, deploy Ready, chips visibles en producción y sin errores de consola. En **modo demo** (`.env.local` temporal sin Supabase, ya eliminado): 15 tarjetas en `Todos`, 11 en `Hombre`, 12 en `Mujer`; `/producto/boxer-tierra/` abre con etiqueta **HOMBRE** y guía **Ropa interior** de 6 filas. El `localStorage` con 12 productos se migró solo y agregó los 3 nuevos sin borrar stock.
+- **Migración `add-audience-and-underwear.sql`:** ejecutada y verificada el 26/11/2026 (15 activos: 3 hombre / 4 mujer / 8 unisex; 3 con guía `interior`). Es ASCII-only e idempotente; si se corrió la versión anterior, volver a ejecutar el archivo actualizado para corregir los acentos de las descripciones.
+- **Verificado:** 65/65 tests, build y postbuild OK, deploy Ready, chips visibles en producción y sin errores de consola. En **producción** (con Supabase): 15 tarjetas en `Todos`, 11 en `Hombre`, 12 en `Mujer`; `/producto/boxer-tierra/` con `og:type=product`, etiqueta **HOMBRE** y guía **Ropa interior** de 6 filas; sitemap con 16 URLs. En **modo demo** (`.env.local` temporal sin Supabase, ya eliminado): mismos conteos y el `localStorage` con 12 productos se migró solo y agregó los 3 nuevos sin borrar stock.
 
 ---
 
@@ -281,7 +281,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 > Ejecutado y verificado el 22/11/2026: el RPC responde `hernan` → `hernan.diiaz@gmail.com` (ignora mayúsculas, devuelve `null` para aliases inexistentes) y se confirmó el ingreso a `/admin` con **`hernan` + la contraseña de Supabase**. El login con correo sigue funcionando igual.
 
-> **Migración pendiente (26/11/2026):** ejecutar una vez `supabase/add-audience-and-underwear.sql` en el SQL Editor. Agrega `products.audience` (`unisex` por defecto), habilita la categoría `Ropa interior`, etiqueta algunos artículos existentes, asigna la guía `interior` y carga 3 productos de ejemplo (`Boxer Tierra`, `Bombachón Arena`, `Pack Básico x3`). Es ASCII-only e idempotente. Hasta que se ejecute, Supabase sigue mostrando 12 productos y el filtro trata todo como unisex; el modo demo ya muestra los 15. Réplica en modo demo: `admin` / `nys-demo`.
+> **Migración `add-audience-and-underwear.sql`:** ejecutada y verificada el 26/11/2026: 15 productos activos (3 hombre / 4 mujer / 8 unisex), 3 con guía `interior` y acentos correctos en los nombres (`Bombachón`, `Básico`). Es ASCII-only e idempotente; si ya se ejecutó la versión anterior, **volver a correr el archivo actualizado** para corregir los acentos de las descripciones (`algodón`, `cómoda`, `días`) sin duplicar productos. Réplica en modo demo: `admin` / `nys-demo`.
 
 > Seguridad: la publishable key (o la anon legacy) es pública y está protegida por RLS. La `service_role` / secret key **nunca** se pone en variables `VITE_*` ni en el frontend.
 
@@ -498,13 +498,13 @@ git push origin --tags            # Subir tags a GitHub
 
 ## ✅ Estado actual (26 de Noviembre, 2026)
 
-- Sitio en producción y verificado: catálogo leyendo de **Supabase** (`rest/v1/products`), hero **Drop 01 2026** en WebP, footer con ícono de ubicación, 12/12 fotos de Pexels originales y acentos corregidos (`Marrón`, `Pantalón`, `Único`). Imágenes con `srcset` + lazy loading; hero WebP (-79% vs JPG).
-- **Ropa interior y público (nuevo):** filtro Todos / Hombre / Mujer visible en producción, 3 artículos de ejemplo en modo demo, guía `interior` propia y selector en el admin. **Pendiente:** ejecutar `supabase/add-audience-and-underwear.sql` para que Supabase pase de 12 a 15 productos y aplique las etiquetas. Hasta entonces, la tienda en vivo trata todo como unisex.
-- **SEO completo:** robots, sitemap con 13 URLs (home + 12 productos), canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer`. `og:description` dice "Envíos dentro de Catamarca". Con la migración y un nuevo deploy serán 16 URLs.
-- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. `add-size-guides.sql` ejecutado y verificado (12/12 con guía). Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` con rol `admin`, login verificado con correo y alias **`hernan`**.
+- Sitio en producción y verificado: catálogo leyendo de **Supabase** (`rest/v1/products`), hero **Drop 01 2026** en WebP, footer con ícono de ubicación, 15/15 fotos de Pexels (12 originales + 3 de ropa interior) y acentos corregidos en nombres (`Marrón`, `Pantalón`, `Único`, `Bombachón`, `Básico`). Imágenes con `srcset` + lazy loading; hero WebP (-79% vs JPG).
+- **Ropa interior y público:** filtro Todos / Hombre / Mujer verificado en producción y demo (15 / 11 / 12 tarjetas), 3 artículos con etiqueta y guía `interior` propia, selector en el admin. Migración ejecutada: Supabase pasó de 12 a 15 productos. Detalle menor: re-ejecutar el SQL actualizado para acentuar las descripciones de los 3 artículos nuevos.
+- **SEO completo:** robots, sitemap con 16 URLs (home + 15 productos, incluidas las 3 páginas nuevas de ropa interior), canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer`. `og:description` dice "Envíos dentro de Catamarca".
+- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 15 productos activos, RLS/funciones activas. `add-size-guides.sql` y `add-audience-and-underwear.sql` ejecutados y verificados (guías asignadas y `audience` con 3 / 4 / 8). Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` con rol `admin`, login verificado con correo y alias **`hernan`**.
 - **Analytics:** Vercel Web Analytics habilitado y verificado (excluye `/admin`), sin cookies ni GA4.
-- **Guía de talles:** desplegable en el modal con tablas por categoría (incluye `interior`) y editor en el admin. Verificado en `/producto/botitas-sur/` (guía Calzado, 9 filas) tras el último deploy.
-- **Tests:** 65/65 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔ (`tienda-9c5vhv05r-hernan-d-team.vercel.app`)
+- **Guía de talles:** desplegable en el modal con tablas por categoría (incluye `interior`) y editor en el admin. Verificado en `/producto/botitas-sur/` (guía Calzado, 9 filas) y `/producto/boxer-tierra/` (guía Ropa interior, 6 filas).
+- **Tests:** 65/65 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔ (`tienda-428ykbcw1-hernan-d-team.vercel.app`)
 - Repositorio limpio y sincronizado con `origin/main` (`.env` no versionado).
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**. MercadoPago sigue sin tocarse.
 

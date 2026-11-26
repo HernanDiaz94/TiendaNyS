@@ -1,6 +1,8 @@
 import { demoProducts } from '../data/demoProducts.js';
 import { nextPurchasedAt } from './inventory.js';
 
+const VALID_AUDIENCES = new Set(['unisex', 'hombre', 'mujer']);
+
 const PRODUCTS_KEY = 'nys-demo-products-v2';
 const ORDERS_KEY = 'nys-demo-orders-v2';
 const PURCHASES_KEY = 'nys-demo-purchases-v2';
@@ -57,6 +59,27 @@ const SEED_IMAGES = new Map(
   demoProducts.map((product) => [String(product.id), product.image_url]),
 );
 
+const SEED_AUDIENCES = new Map(
+  demoProducts.map((product) => [String(product.id), product.audience]),
+);
+
+// Artículos nuevos de la semilla: se agregan sin borrar el stock guardado.
+const NEW_SEED_IDS = ['nys-013', 'nys-014', 'nys-015'];
+
+function withNewSeedProducts(products) {
+  const ids = new Set(products.map((product) => String(product.id)));
+  const missing = demoProducts.filter(
+    (product) => NEW_SEED_IDS.includes(String(product.id)) && !ids.has(String(product.id)),
+  );
+  return missing.length ? [...products, ...missing] : products;
+}
+
+function storedAudience(product) {
+  const value = String(product.audience || '').trim().toLowerCase();
+  if (VALID_AUDIENCES.has(value)) return value;
+  return SEED_AUDIENCES.get(String(product.id)) || 'unisex';
+}
+
 // Fotos reemplazadas después del primer cambio de imágenes.
 const REPLACED_IMAGE_IDS = new Map([
   ['nys-003', '9629915'],
@@ -77,6 +100,7 @@ function withInventoryDefaults(product) {
   return {
     ...product,
     image_url: imageUrl,
+    audience: storedAudience(product),
     purchased_at: product.purchased_at || product.created_at || new Date().toISOString(),
   };
 }
@@ -87,10 +111,14 @@ export function readDemoProducts() {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        const normalized = parsed.map(withInventoryDefaults);
-        if (normalized.some((product, index) => product.image_url !== parsed[index].image_url)) {
-          writeDemoProducts(normalized);
-        }
+        const merged = withNewSeedProducts(parsed);
+        const normalized = merged.map(withInventoryDefaults);
+        const changed = merged.length !== parsed.length
+          || normalized.some((product, index) => (
+            product.image_url !== merged[index].image_url
+            || product.audience !== merged[index].audience
+          ));
+        if (changed) writeDemoProducts(normalized);
         return normalized;
       }
     } catch {
@@ -119,6 +147,7 @@ export function createDemoProduct(payload) {
     id: makeId(),
     created_at: new Date().toISOString(),
     purchased_at: payload.purchased_at || new Date().toISOString(),
+    audience: storedAudience(payload),
     is_active: payload.is_active !== false,
     featured: Boolean(payload.featured),
   };

@@ -10,6 +10,7 @@ update public.products
 set size_guide_key = case
   when lower(category) = 'calzado' then 'calzado'
   when lower(category) = 'pantalones' then 'inferior'
+  when lower(category) = 'ropa interior' then 'interior'
   when lower(category) in ('remeras', 'camisas', 'abrigos') then 'superior'
   when lower(category) = 'accesorios' then 'unico'
   else ''

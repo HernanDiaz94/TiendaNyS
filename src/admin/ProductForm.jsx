@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ImagePlus, Plus, Trash2, Upload, X } from 'lucide-react';
 import {
+  AUDIENCE_OPTIONS,
   CATEGORIES,
   SIZE_PRESETS,
   emptyProductDraft,
@@ -229,6 +230,24 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
               >
                 {categoryOptions.map((category) => (
                   <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField
+              id="product-audience"
+              label="Público"
+              error={errors.audience}
+              hint="Sin etiqueta se muestra como unisex y aparece en Hombre y Mujer."
+            >
+              <select
+                id="product-audience"
+                value={draft.audience}
+                onChange={(event) => setField('audience', event.target.value)}
+                aria-invalid={Boolean(errors.audience)}
+              >
+                {AUDIENCE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
             </FormField>

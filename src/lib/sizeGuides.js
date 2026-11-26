@@ -11,6 +11,7 @@ export const SIZE_GUIDE_KEYS = {
   CALZADO: 'calzado',
   SUPERIOR: 'superior',
   INFERIOR: 'inferior',
+  INTERIOR: 'interior',
   UNICO: 'unico',
 };
 
@@ -74,6 +75,24 @@ const GENERIC_GUIDES = {
     ],
     note: 'Medidas orientativas del cuerpo. Para un calce holgado, elegí un talle más.',
   },
+  interior: {
+    key: 'interior',
+    label: 'Ropa interior',
+    columns: [
+      { key: 'cintura', label: 'Cintura (cm)' },
+      { key: 'cadera', label: 'Cadera (cm)' },
+      { key: 'ar', label: 'AR' },
+    ],
+    rows: [
+      { size: 'XS', values: { cintura: '60-64', cadera: '84-88', ar: '36' } },
+      { size: 'S', values: { cintura: '66-70', cadera: '90-94', ar: '38' } },
+      { size: 'M', values: { cintura: '72-76', cadera: '96-100', ar: '40' } },
+      { size: 'L', values: { cintura: '78-82', cadera: '102-106', ar: '42' } },
+      { size: 'XL', values: { cintura: '84-88', cadera: '108-112', ar: '44' } },
+      { size: 'XXL', values: { cintura: '90-94', cadera: '114-118', ar: '46' } },
+    ],
+    note: 'Medidas del cuerpo, no de la prenda. Si dudás entre dos talles, elegí el mayor.',
+  },
   unico: {
     key: 'unico',
     label: 'Talle único',
@@ -88,6 +107,7 @@ export const SIZE_GUIDE_CHOICES = [
   { value: SIZE_GUIDE_KEYS.CALZADO, label: GENERIC_GUIDES.calzado.label },
   { value: SIZE_GUIDE_KEYS.SUPERIOR, label: GENERIC_GUIDES.superior.label },
   { value: SIZE_GUIDE_KEYS.INFERIOR, label: GENERIC_GUIDES.inferior.label },
+  { value: SIZE_GUIDE_KEYS.INTERIOR, label: GENERIC_GUIDES.interior.label },
   { value: SIZE_GUIDE_KEYS.UNICO, label: GENERIC_GUIDES.unico.label },
 ];
 
@@ -97,6 +117,7 @@ const CATEGORY_TO_GUIDE = {
   remeras: SIZE_GUIDE_KEYS.SUPERIOR,
   camisas: SIZE_GUIDE_KEYS.SUPERIOR,
   abrigos: SIZE_GUIDE_KEYS.SUPERIOR,
+  'ropa interior': SIZE_GUIDE_KEYS.INTERIOR,
   accesorios: SIZE_GUIDE_KEYS.UNICO,
 };
 

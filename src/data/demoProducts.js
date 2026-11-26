@@ -1,3 +1,4 @@
+import { normalizeAudience } from '../lib/products.js';
 import { guideKeyForCategory } from '../lib/sizeGuides.js';
 
 const daysAgo = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -70,6 +71,7 @@ const rawProducts = [
     id: 'nys-005',
     name: 'Pantalón Nube',
     category: 'Pantalones',
+    audience: 'mujer',
     description: 'Tiro alto y caída fluida. Un básico que combina con todo.',
     price: 45900,
     stock: 2,
@@ -84,6 +86,7 @@ const rawProducts = [
     id: 'nys-006',
     name: 'Buzo Monte',
     category: 'Abrigos',
+    audience: 'hombre',
     description: 'Frisa suave para los días frescos y las tardes largas.',
     price: 58900,
     stock: 6,
@@ -112,6 +115,7 @@ const rawProducts = [
     id: 'nys-008',
     name: 'Sandalias Costa',
     category: 'Calzado',
+    audience: 'mujer',
     description: 'Livianas y versátiles para acompañar el verano.',
     price: 32900,
     stock: 0,
@@ -126,6 +130,7 @@ const rawProducts = [
     id: 'nys-009',
     name: 'Camisa Oliva',
     category: 'Camisas',
+    audience: 'hombre',
     description: 'Textura natural, botones de madera y calce amplio. Para usar abierta o cerrada.',
     price: 41900,
     stock: 5,
@@ -155,6 +160,7 @@ const rawProducts = [
     id: 'nys-011',
     name: 'Botitas Sur',
     category: 'Calzado',
+    audience: 'mujer',
     description: 'Clásicas, cómodas y listas para caminar la ciudad.',
     price: 89900,
     stock: 1,
@@ -180,10 +186,55 @@ const rawProducts = [
     is_active: true,
     created_at: daysAgo(13),
   },
+  {
+    id: 'nys-013',
+    name: 'Boxer Tierra',
+    category: 'Ropa interior',
+    audience: 'hombre',
+    description: 'Boxer de algodón con elastano, cintura cómoda y calce libre.',
+    price: 14900,
+    stock: 8,
+    image_url: 'https://images.pexels.com/photos/17459893/pexels-photo-17459893.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    sizes: ['S', 'M', 'L', 'XL'],
+    color: 'Arena',
+    featured: false,
+    is_active: true,
+    created_at: daysAgo(3),
+  },
+  {
+    id: 'nys-014',
+    name: 'Bombachón Arena',
+    category: 'Ropa interior',
+    audience: 'mujer',
+    description: 'Bombachón de algodón suave, tiro alto y terminaciones textiles.',
+    price: 18900,
+    stock: 6,
+    image_url: 'https://images.pexels.com/photos/11010391/pexels-photo-11010391.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    sizes: ['S', 'M', 'L'],
+    color: 'Tostado',
+    featured: false,
+    is_active: true,
+    created_at: daysAgo(2),
+  },
+  {
+    id: 'nys-015',
+    name: 'Pack Básico x3',
+    category: 'Ropa interior',
+    description: 'Set de tres piezas lisas, cómodas y para usar todos los días.',
+    price: 29900,
+    stock: 4,
+    image_url: 'https://images.pexels.com/photos/11010388/pexels-photo-11010388.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    sizes: ['S', 'M', 'L'],
+    color: 'Crudo',
+    featured: false,
+    is_active: true,
+    created_at: daysAgo(1),
+  },
 ];
 
-// La guía genérica se asigna por categoría; el admin puede cambiarla por producto.
+// Sin etiqueta = unisex. La guía genérica se asigna por categoría; el admin puede cambiarla.
 export const demoProducts = rawProducts.map((product) => ({
   ...product,
+  audience: normalizeAudience(product.audience),
   size_guide_key: guideKeyForCategory(product.category),
 }));

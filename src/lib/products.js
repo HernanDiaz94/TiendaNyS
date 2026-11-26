@@ -12,6 +12,15 @@ export const CATEGORIES = [
   'Abrigos',
   'Calzado',
   'Accesorios',
+  'Ropa interior',
+];
+
+export const AUDIENCES = ['unisex', 'hombre', 'mujer'];
+
+export const AUDIENCE_OPTIONS = [
+  { value: 'unisex', label: 'Unisex (sin etiqueta)' },
+  { value: 'hombre', label: 'Hombre' },
+  { value: 'mujer', label: 'Mujer' },
 ];
 
 export const SIZE_PRESETS = [
@@ -40,6 +49,17 @@ export function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
+}
+
+/** Productos sin etiqueta (null, vacío o valor desconocido) caen en unisex. */
+export function normalizeAudience(value) {
+  const key = normalizeText(value);
+  return key === 'hombre' || key === 'mujer' ? key : 'unisex';
+}
+
+export function normalizeAudienceFilter(value) {
+  const key = normalizeText(value);
+  return key === 'hombre' || key === 'mujer' ? key : '';
 }
 
 export function parseSizes(value) {
@@ -127,11 +147,17 @@ export function sortProducts(products, sort = 'featured') {
 export function filterProducts(products, filters = {}) {
   const category = filters.category && filters.category !== 'Todo' ? filters.category : null;
   const size = filters.size && filters.size !== 'Todos' ? filters.size : null;
+  const audience = normalizeAudienceFilter(filters.audience);
   const query = normalizeText(filters.query);
 
   const visible = (products || [])
     .filter((product) => product.is_active !== false)
     .filter((product) => !category || product.category === category)
+    .filter((product) => {
+      if (!audience) return true;
+      const label = normalizeAudience(product.audience);
+      return label === 'unisex' || label === audience;
+    })
     .filter((product) => {
       if (!size) return true;
       const sizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Único'];
@@ -141,7 +167,7 @@ export function filterProducts(products, filters = {}) {
     .filter((product) => {
       if (!query) return true;
       return normalizeText(
-        [product.name, product.description, product.category, product.color].join(' '),
+        [product.name, product.description, product.category, product.color, normalizeAudience(product.audience)].join(' '),
       ).includes(query);
     });
 
@@ -156,6 +182,7 @@ export function validateProduct(values, options = {}) {
   const name = String(values?.name ?? '').trim();
   const description = String(values?.description ?? '').trim();
   const category = String(values?.category ?? '').trim();
+  const audience = String(values?.audience ?? '').trim();
   const color = String(values?.color ?? '').trim();
   const imageUrl = String(values?.image_url ?? '').trim();
   const price = Number(values?.price);
@@ -167,6 +194,9 @@ export function validateProduct(values, options = {}) {
   if (description.length > 500) errors.description = 'La descripción no puede superar los 500 caracteres.';
   if (!category) errors.category = 'Elegí una categoría.';
   else if (category.length > 40) errors.category = 'La categoría es demasiado larga.';
+  if (audience && !AUDIENCES.includes(normalizeText(audience))) {
+    errors.audience = 'Elegí un público válido: unisex, hombre o mujer.';
+  }
   if (color.length > 40) errors.color = 'El color no puede superar los 40 caracteres.';
 
   if (!Number.isFinite(price) || price <= 0) errors.price = 'Ingresá un precio mayor a cero.';
@@ -204,6 +234,7 @@ export function normalizeProductDraft(values) {
     name: String(values?.name ?? '').trim(),
     description: String(values?.description ?? '').trim(),
     category: String(values?.category ?? '').trim(),
+    audience: normalizeAudience(values?.audience),
     color: String(values?.color ?? '').trim(),
     image_url: String(values?.image_url ?? '').trim(),
     price: Math.round(Number(values?.price) * 100) / 100,
@@ -221,6 +252,7 @@ export function productDraftFrom(product) {
     name: product?.name || '',
     description: product?.description || '',
     category: product?.category || CATEGORIES[0],
+    audience: normalizeAudience(product?.audience),
     color: product?.color || '',
     image_url: product?.image_url || '',
     price: product?.price ?? '',
@@ -240,6 +272,7 @@ export function emptyProductDraft() {
     name: '',
     description: '',
     category: CATEGORIES[0],
+    audience: 'unisex',
     color: '',
     image_url: '',
     price: '',

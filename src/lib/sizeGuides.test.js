@@ -13,6 +13,7 @@ describe('guideKeyForCategory', () => {
     expect(guideKeyForCategory('Calzado')).toBe(SIZE_GUIDE_KEYS.CALZADO);
     expect(guideKeyForCategory('Pantalones')).toBe(SIZE_GUIDE_KEYS.INFERIOR);
     expect(guideKeyForCategory('Abrigos')).toBe(SIZE_GUIDE_KEYS.SUPERIOR);
+    expect(guideKeyForCategory('Ropa interior')).toBe(SIZE_GUIDE_KEYS.INTERIOR);
     expect(guideKeyForCategory('Accesorios')).toBe(SIZE_GUIDE_KEYS.UNICO);
   });
 
@@ -88,6 +89,13 @@ describe('resolveSizeGuide', () => {
   it('falls back to the assigned key and then to the category', () => {
     expect(resolveSizeGuide({ category: 'Remeras', size_guide_key: 'calzado' }).key).toBe('calzado');
     expect(resolveSizeGuide({ category: 'Pantalones', size_guide_key: null }).key).toBe('inferior');
+    expect(resolveSizeGuide({ category: 'Ropa interior' }).key).toBe('interior');
     expect(resolveSizeGuide({ category: 'Muebles' })).toBeNull();
+  });
+
+  it('builds the underwear guide with waist, hip and AR columns', () => {
+    const guide = createSizeGuide(SIZE_GUIDE_KEYS.INTERIOR);
+    expect(guide.columns.map((column) => column.key)).toEqual(['cintura', 'cadera', 'ar']);
+    expect(guide.rows).toHaveLength(6);
   });
 });

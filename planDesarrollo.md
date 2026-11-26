@@ -1,6 +1,6 @@
 # Tienda NyS — Planificación y Registro del Proyecto
 
-**Última actualización:** 22 de Noviembre, 2026  
+**Última actualización:** 26 de Noviembre, 2026  
 **Repositorio:** https://github.com/HernanDiaz94/TiendaNyS  
 **Sitio en producción:** https://tienda-nys.vercel.app/  
 **Sitio anterior (pausado):** https://tienda-nys.netlify.app/
@@ -20,18 +20,18 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - **Estilos:** CSS vanilla (paleta tierra suave)
 - **Backend:** Supabase (opcional, modo demo con localStorage)
 - **Hosting:** Vercel (deploy automático desde GitHub)
-- **Testing:** Vitest (54 tests)
+- **Testing:** Vitest (65 tests)
 
 ---
 
 ## ✅ Funcionalidades Implementadas
 
 ### Storefront (Tienda)
-- [x] Catálogo de 12 productos con fotos con estética andina (Pexels)
-- [x] Filtros por categoría, talle y búsqueda
+- [x] Catálogo con fotos con estética andina (Pexels): 15 productos en modo demo (12 en Supabase hasta ejecutar la migración `add-audience-and-underwear.sql`)
+- [x] Filtros por categoría, **público (Todos / Hombre / Mujer)**, talle y búsqueda; los artículos sin etiqueta son unisex y aparecen en Hombre y Mujer
 - [x] Carrito de compras (localStorage)
-- [x] Modal de producto con detalles
-- [x] Guía de talles desplegable en el modal (calzado, superior, inferior y único)
+- [x] Modal de producto con detalles y etiqueta de público cuando no es unisex
+- [x] Guía de talles desplegable en el modal (calzado, superior, inferior, **ropa interior** y único)
 - [x] Modalidad de entrega en dos tarjetas separadas: **Retiro en el local** y **Envíos dentro de Catamarca** (también en el mensaje de WhatsApp y en el checkout de la bolsa)
 - [x] Checkout sin DNI: solo Nombre y WhatsApp
 - [x] Checkout por WhatsApp (mensaje con nombre, talle, cantidad y precio por producto)
@@ -54,6 +54,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Fecha de ingreso visible en cada artículo del catálogo
 - [x] Alerta y filtro de artículos con más de 6 meses en inventario
 - [x] Editor de guía de talles por producto (elegí el tipo y ajustá medidas/nota)
+- [x] Selector de público por producto (unisex / hombre / mujer; sin etiqueta = unisex)
 
 ### Adaptaciones a Catamarca
 - [x] Texto "CATAMARCA" en todo el sitio
@@ -86,8 +87,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/components/Hero.jsx` | Sección hero con imagen y título "Simples" |
 | `src/components/Story.jsx` | Sección "Nosotros" con stamp "CTA" |
 | `src/components/Footer.jsx` | Footer con dirección, horarios, WhatsApp |
-| `src/components/Catalog.jsx` | Catálogo de productos con filtros |
-| `src/components/ProductModal.jsx` | Modal de detalle de producto, con guía de talles desplegable |
+| `src/components/Catalog.jsx` | Catálogo con filtros de categoría, público, talle y búsqueda |
+| `src/components/ProductModal.jsx` | Modal de detalle con guía de talles y etiqueta de público |
 | `src/components/CartDrawer.jsx` | Carrito de compras lateral |
 | `src/components/Header.jsx` | Header con búsqueda y navegación |
 | `src/components/ui.jsx` | Componentes UI (ProductImage, etc.) |
@@ -95,9 +96,10 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 ### Datos
 | Archivo | Descripción |
 |---------|-------------|
-| `src/data/demoProducts.js` | 12 productos con imágenes Pexels (estética andina) y guía por categoría |
-| `src/lib/sizeGuides.js` | Guías genéricas, normalización y resolución por producto |
-| `src/lib/demoStore.js` | Persistencia demo; migra fotos viejas de Unsplash y URLs reemplazadas a las nuevas |
+| `src/data/demoProducts.js` | 15 productos (12 originales + 3 de ropa interior) con fotos Pexels y guía por categoría |
+| `src/lib/products.js` | Categorías, normalización de público y filtrado (unisex en Hombre y Mujer) |
+| `src/lib/sizeGuides.js` | Guías genéricas (incluye `interior`), normalización y resolución por producto |
+| `src/lib/demoStore.js` | Persistencia demo; migra fotos y agrega los 3 artículos nuevos sin borrar stock |
 
 ### Admin
 | Archivo | Descripción |
@@ -106,7 +108,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/admin/AdminLogin.jsx` | Login con usuario `admin` o correo, y registro de admins demo |
 | `src/hooks/useAuth.js` | Sesión demo, login por correo/usuario y `signUp` demo |
 | `src/admin/AdminPanel.jsx` | Pedidos, catálogo, stock y compras |
-| `src/admin/ProductForm.jsx` | Alta y edición de artículos |
+| `src/admin/ProductForm.jsx` | Alta y edición de artículos (público, guía de talles y medidas) |
 | `src/admin/PurchaseForm.jsx` | Registro de compras (lote, costo, proveedor, fecha) |
 | `src/hooks/usePurchases.js` | Historial de compras (Supabase o demo) |
 | `src/lib/inventory.js` | Antigüedad de stock, validación de compras y alerta de +6 meses |
@@ -131,8 +133,11 @@ Fotos de tonos tierra, lana y cuero, con estética del noroeste argentino. URLs 
 | 10 | Tote Mercado | 17836626 | Tote de lona y cuero |
 | 11 | Botitas Sur | 19750710 | Botas de cuero marrón |
 | 12 | Chaleco Clara | 9904108 | Chaleco de lana crema |
+| 13 | Boxer Tierra | 17459893 | Prenda de algodón sobre fondo textil (hombre) |
+| 14 | Bombachón Arena | 11010391 | Ropa interior doblada sobre madera (mujer) |
+| 15 | Pack Básico x3 | 11010388 | Set de tres piezas lisas (unisex) |
 
-> Los datos demo ya guardados en `localStorage` se migran solos: `demoStore.js` reemplaza las URLs viejas de Unsplash para estos 12 artículos al cargar el catálogo.
+> Los datos demo ya guardados en `localStorage` se migran solos: `demoStore.js` reemplaza las URLs viejas de Unsplash para estos 12 artículos y agrega los 3 nuevos de ropa interior sin borrar stock, pedidos ni compras. Las tres fotos nuevas (200 OK) muestran prendas dobladas o sobre textiles, aptas para un catálogo familiar.
 
 ### Imágenes de Hero/Story
 
@@ -177,6 +182,7 @@ Cada prenda tiene su propia URL `/producto/<slug>/` (por ejemplo `/producto/boti
 - **Por qué HTML estático y no solo JS:** WhatsApp, Facebook, Twitter e Instagram **no ejecutan JavaScript**. Al generar el HTML en el build, el link compartido muestra foto, nombre, precio y disponibilidad reales. Google también indexa esas páginas sin depender del render del SPA.
 - **Verificado en producción:** las 12 páginas devuelven 200 con `og:type=product`, JSON-LD de producto y canonical propio; `/sitemap.xml` lista 12 URLs; el modal se abre desde la URL directa sin errores de consola.
 - **Aclaración:** los meta tags se actualizan en cada **deploy**. Si cambiás precio, foto o stock en el admin, hay que correr un deploy para regenerar el HTML (los datos que se ven dentro del modal sí son en vivo desde Supabase).
+- **Ropa interior (26/11/2026):** al ejecutar la migración de `audience` se suman 3 productos. El catálogo en vivo los muestra de inmediato, pero el sitemap y las páginas HTML pasan de 12 a 15 URLs recién con un nuevo deploy.
 
 ---
 
@@ -195,7 +201,7 @@ Se eligió **Vercel Web Analytics** (no GA4): no necesita ID de medición, no us
 
 ---
 
-## 📏 Guía de talles (22/11/2026)
+## 📏 Guía de talles (actualizado 26/11/2026)
 
 Se agregó una guía **genérica por categoría**, sin inventar medidas propias:
 
@@ -204,14 +210,28 @@ Se agregó una guía **genérica por categoría**, sin inventar medidas propias:
 | Calzado | `calzado` | AR, BR, US, EU y plantilla en cm (36 al 44) |
 | Remeras, Camisas, Abrigos | `superior` | pecho, cintura y largo (XS a XXL) |
 | Pantalones | `inferior` | cintura, cadera y largo (XS a XXL) |
+| Ropa interior | `interior` | cintura, cadera y AR (XS a XXL) |
 | Accesorios | `unico` | solo nota de talle único |
 
 - En la tienda aparece como un bloque desplegable **"Guía de talles · <tipo>"** dentro del modal, entre los talles y el botón de compra. Es un `<details>`: no ocupa espacio si no se abre y la tabla tiene encabezado fijo y scroll.
 - Prioridad de resolución (`src/lib/sizeGuides.js`): medidas editables guardadas en Supabase → `size_guide_key` asignado → inferencia por categoría. Si no hay categoría conocida, el bloque no se muestra.
+- **Ropa interior (26/11/2026):** guía propia `interior` (cintura, cadera y AR); **no reutiliza** la de pantalones. Se aplica por categoría y también la escribe la migración nueva en los 3 artículos de ejemplo.
 - En el admin, el formulario de producto tiene un selector de guía y un editor de medidas/nota con valores genéricos cargados y un botón **"Restablecer valores genéricos"**. El botón de restablecer usa copias frescas para no mutar la plantilla.
 - Los datos viajan en `products.size_guide_key` (texto) y `products.size_measurements` (jsonb). Todo se sanitiza antes de renderizar: columnas y filas con límites, claves alfanuméricas y textos recortados.
 - **Verificado en producción:** `/producto/botitas-sur/` muestra la guía de calzado con 9 filas y las 5 columnas esperadas. Las celdas de encabezado y datos están centradas (commit `8297300`).
-- **Migración pendiente en Supabase:** ejecutar una vez `supabase/add-size-guides.sql` en el SQL Editor (ascii puro, se copia y pega sin problemas). Mientras no se ejecute, la tienda sigue mostrando la guía por categoría y `useCatalog` omite las columnas nuevas al guardar, así que el CRUD del admin no se rompe; recién después de la migración se persisten las ediciones. El bloque también quedó incorporado a `supabase/schema.sql` para instalaciones nuevas.
+- **Migración `add-size-guides.sql`:** ejecutada y verificada el 26/11/2026. La columna `size_guide_key` existe y los 12 artículos activos tienen guía asignada. El bloque quedó incorporado a `supabase/schema.sql` para instalaciones nuevas.
+
+---
+
+## 👥 Público y ropa interior (26/11/2026)
+
+- **Filtro Todos / Hombre / Mujer** en el catálogo (`src/components/Catalog.jsx`). Un producto sin etiqueta (`null`, vacío o valor desconocido) se normaliza a **unisex** y aparece en **Hombre y Mujer**; en `Todos` aparece igual.
+- **Etiqueta por producto** en el admin (`src/admin/ProductForm.jsx`): `Unisex (sin etiqueta)` / `Hombre` / `Mujer`. Se guarda en `products.audience` con default `unisex` y un `CHECK` que admite solo esos tres valores.
+- `src/lib/products.js` centraliza `normalizeAudience`, `normalizeAudienceFilter` y el filtrado; `useCatalog` detecta si la columna existe y la omite al guardar si la migración aún no se ejecutó, para no romper el CRUD.
+- **Categoría nueva `Ropa interior`** con 3 ejemplos: `Boxer Tierra` (hombre), `Bombachón Arena` (mujer) y `Pack Básico x3` (unisex). Fotos Pexels revisadas, aptas para un catálogo familiar (prendas dobladas o sobre textiles, sin modelos en ropa interior).
+- **Guía propia** `interior` con columnas cintura / cadera / AR, talles XS a XXL.
+- **Migración pendiente:** `supabase/add-audience-and-underwear.sql` (ASCII-only e idempotente). La ejecuta el usuario en el SQL Editor. Hasta entonces Supabase muestra 12 productos y todo se trata como unisex; el modo demo ya muestra los 15.
+- **Verificado:** 65/65 tests, build y postbuild OK, deploy Ready, chips visibles en producción y sin errores de consola.
 
 ---
 
@@ -259,7 +279,9 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 6. Probar en `/admin`: iniciar sesión con el **correo y contraseña** del usuario creado (en modo Supabase ya no aplica el usuario `admin` / clave `nys-demo`).
 7. **Login por nombre de usuario (22/11/2026):** ejecutar una vez `supabase/add-username-login.sql` en el SQL Editor. Agrega `profiles.username`, el RPC `resolve_admin_username` y setea el alias **`hernan`** para `hernan.diiaz@gmail.com`. Después se puede entrar con **`hernan` + la contraseña de Supabase** (o seguir usando el correo). El RPC es `security definer`, solo devuelve el email de perfiles con `role = 'admin'` y se lo concede a `anon`/`authenticated`. El error de usuario inexistente es idéntico al de credenciales inválidas para no revelar aliases. El mismo bloque quedó incorporado a `supabase/schema.sql` para instalaciones nuevas.
 
-> Ejecutado y verificado el 22/11/2026: el RPC responde `hernan` → `hernan.diiaz@gmail.com` (ignora mayúsculas, devuelve `null` para aliases inexistentes) y se confirmó el ingreso a `/admin` con **`hernan` + la contraseña de Supabase**. El login con correo sigue funcionando igual. Réplica en modo demo: `admin` / `nys-demo`.
+> Ejecutado y verificado el 22/11/2026: el RPC responde `hernan` → `hernan.diiaz@gmail.com` (ignora mayúsculas, devuelve `null` para aliases inexistentes) y se confirmó el ingreso a `/admin` con **`hernan` + la contraseña de Supabase**. El login con correo sigue funcionando igual.
+
+> **Migración pendiente (26/11/2026):** ejecutar una vez `supabase/add-audience-and-underwear.sql` en el SQL Editor. Agrega `products.audience` (`unisex` por defecto), habilita la categoría `Ropa interior`, etiqueta algunos artículos existentes, asigna la guía `interior` y carga 3 productos de ejemplo (`Boxer Tierra`, `Bombachón Arena`, `Pack Básico x3`). Es ASCII-only e idempotente. Hasta que se ejecute, Supabase sigue mostrando 12 productos y el filtro trata todo como unisex; el modo demo ya muestra los 15. Réplica en modo demo: `admin` / `nys-demo`.
 
 > Seguridad: la publishable key (o la anon legacy) es pública y está protegida por RLS. La `service_role` / secret key **nunca** se pone en variables `VITE_*` ni en el frontend.
 
@@ -273,6 +295,8 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
+| `5cf9cf7` | feat(catalog): ropa interior, filtro hombre/mujer y guia de talles |
+| `873a7d5` | docs: registrar hero con envios dentro de Catamarca |
 | `d8824be` | fix(copy): envíos dentro de Catamarca en el hero |
 | `e043789` | fix(copy): envíos dentro de Catamarca en modal y checkout |
 | `50a246e` | feat(pdp): separar opciones de retiro y envío en el modal |
@@ -421,12 +445,13 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 
 ### Otras mejoras
 - [x] Conectar Supabase para persistencia real de datos (21/11/2026)
-- [ ] Agregar más productos al catálogo
-- [ ] Configurar MercadoPago para pagos online
-- [ ] Agregar más categorías de productos
+- [x] Agregar más productos al catálogo (3 de ropa interior en demo; en Supabase tras la migración — 26/11/2026)
+- [ ] Configurar MercadoPago para pagos online (**sin implementar ni modificar nada hasta aprobación explícita**)
+- [x] Agregar más categorías de productos (`Ropa interior` — 26/11/2026)
 - [x] Optimizar imágenes (WebP, srcset y lazy loading mejorado — 22/11/2026)
 - [x] SEO base + por producto (HTML estático por prenda, JSON-LD y sitemap — 22/11/2026)
-- [x] Guía de talles por categoría en la ficha del producto (22/11/2026; migración SQL pendiente)
+- [x] Guía de talles por categoría en la ficha del producto (22/11/2026; migración ejecutada el 26/11/2026) y guía propia de ropa interior
+- [x] Filtro por público Hombre/Mujer con unisex por defecto (26/11/2026)
 - [ ] Implementar búsqueda avanzada
 - [ ] Agregar sistema de reviews/calificaciones
 - [ ] Configurar dominio personalizado
@@ -450,10 +475,10 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 62 tests
+npm test             # Ejecuta 65 tests
 
 # Build
-npm run build        # Genera dist/ + 12 páginas SEO de producto (postbuild)
+npm run build        # Genera dist/ + 12 páginas SEO de producto (postbuild; 15 tras la migración de audience)
 
 # Git
 git add .
@@ -471,15 +496,16 @@ git push origin --tags            # Subir tags a GitHub
 
 ---
 
-## ✅ Estado actual (22 de Noviembre, 2026)
+## ✅ Estado actual (26 de Noviembre, 2026)
 
-- Sitio en producción y verificado: **12/12 fotos de Pexels**, hero con imagen **Drop 01 2026** en WebP, footer con ícono de ubicación y catálogo leyendo de **Supabase** (`rest/v1/products` confirmado en el navegador). Imágenes con `srcset` + lazy loading, hero WebP (-79% vs JPG) y acentos del catálogo corregidos (`Marrón`, `Pantalón`, `Único`).
-- **SEO completo:** robots, sitemap con 12 URLs de producto, canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer` para compartir en WhatsApp.
-- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` creado, con rol `admin` y login verificado en `/admin` tanto con correo como con el alias **`hernan`** (SQL `add-username-login.sql` ejecutado y RPC verificado).
-- **Analytics:** Vercel Web Analytics habilitado y verificado (excluye `/admin`). Dos visitas de prueba dieron 1 visitante / 2 page views y el desglose por ruta separó `/` de `/producto/botitas-sur`.
-- **Guía de talles:** desplegable en el modal con tablas por categoría y editor en el admin. Verificado en `/producto/botitas-sur/`. Falta ejecutar `supabase/add-size-guides.sql` para persistir las ediciones.
-- **Tests:** 62/62 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔
-- Repositorio limpio, sin cambios pendientes (`.env` no versionado).
-- Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**.
+- Sitio en producción y verificado: catálogo leyendo de **Supabase** (`rest/v1/products`), hero **Drop 01 2026** en WebP, footer con ícono de ubicación, 12/12 fotos de Pexels originales y acentos corregidos (`Marrón`, `Pantalón`, `Único`). Imágenes con `srcset` + lazy loading; hero WebP (-79% vs JPG).
+- **Ropa interior y público (nuevo):** filtro Todos / Hombre / Mujer visible en producción, 3 artículos de ejemplo en modo demo, guía `interior` propia y selector en el admin. **Pendiente:** ejecutar `supabase/add-audience-and-underwear.sql` para que Supabase pase de 12 a 15 productos y aplique las etiquetas. Hasta entonces, la tienda en vivo trata todo como unisex.
+- **SEO completo:** robots, sitemap con 13 URLs (home + 12 productos), canonical y JSON-LD de tienda + una página HTML estática por prenda (`/producto/<slug>/`) con meta tags y `Product`/`Offer`. `og:description` dice "Envíos dentro de Catamarca". Con la migración y un nuevo deploy serán 16 URLs.
+- **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 12 productos semilla, RLS/funciones activas. `add-size-guides.sql` ejecutado y verificado (12/12 con guía). Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` con rol `admin`, login verificado con correo y alias **`hernan`**.
+- **Analytics:** Vercel Web Analytics habilitado y verificado (excluye `/admin`), sin cookies ni GA4.
+- **Guía de talles:** desplegable en el modal con tablas por categoría (incluye `interior`) y editor en el admin. Verificado en `/producto/botitas-sur/` (guía Calzado, 9 filas) tras el último deploy.
+- **Tests:** 65/65 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔ (`tienda-9c5vhv05r-hernan-d-team.vercel.app`)
+- Repositorio limpio y sincronizado con `origin/main` (`.env` no versionado).
+- Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**. MercadoPago sigue sin tocarse.
 
-*Documento actualizado manualmente. Última actualización: 22 de Noviembre, 2026*
+*Documento actualizado manualmente. Última actualización: 26 de Noviembre, 2026*

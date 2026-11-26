@@ -4,6 +4,12 @@ import { filterProducts, getCatalogCategories, getCatalogSizes, SORT_OPTIONS } f
 import { ProductCard } from './ProductCard.jsx';
 import { Notice } from './ui.jsx';
 
+const AUDIENCE_FILTERS = [
+  { value: '', label: 'Todos' },
+  { value: 'hombre', label: 'Hombre' },
+  { value: 'mujer', label: 'Mujer' },
+];
+
 function SkeletonCard() {
   return (
     <div className="skeleton-card" aria-hidden="true">
@@ -24,6 +30,7 @@ export function Catalog({
   searchRef,
 }) {
   const [category, setCategory] = useState('Todo');
+  const [audience, setAudience] = useState('');
   const [size, setSize] = useState('Todos');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('featured');
@@ -50,21 +57,24 @@ export function Catalog({
   const visible = useMemo(
     () => filterProducts(products, {
       category,
+      audience,
       size,
       query: deferredQuery,
       sort,
       onlyAvailable,
     }),
-    [products, category, size, deferredQuery, sort, onlyAvailable],
+    [products, category, audience, size, deferredQuery, sort, onlyAvailable],
   );
 
   const hasFilters = category !== 'Todo'
+    || audience !== ''
     || size !== 'Todos'
     || query.trim().length > 0
     || onlyAvailable;
 
   const clearFilters = () => {
     setCategory('Todo');
+    setAudience('');
     setSize('Todos');
     setQuery('');
     setSort('featured');
@@ -80,7 +90,7 @@ export function Catalog({
           <p className="eyebrow">DROP 01 · DISPONIBLE ONLINE</p>
           <h2>Elegí tu <em>onda.</em></h2>
           <p className="section-lede">
-            Pocas prendas, bien elegidas. Filtrá por categoría o talle y armá tu look.
+            Pocas prendas, bien elegidas. Filtrá por categoría, público o talle y armá tu look.
           </p>
         </div>
         <span className="section-count" aria-hidden="true">
@@ -139,6 +149,23 @@ export function Catalog({
               {option.category} <span>{option.count}</span>
             </button>
           ))}
+        </div>
+
+        <div className="size-filter">
+          <span className="filter-label">Público</span>
+          <div className="chips chips--sizes" role="group" aria-label="Filtrar por público">
+            {AUDIENCE_FILTERS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`chip chip--sm ${audience === option.value ? 'is-active' : ''}`}
+                aria-pressed={audience === option.value}
+                onClick={() => setAudience(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {sizeOptions.length > 1 && (

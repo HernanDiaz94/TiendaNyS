@@ -22,6 +22,14 @@ create table if not exists public.products (
 alter table public.products add column if not exists purchased_at timestamptz;
 update public.products set purchased_at = created_at where purchased_at is null;
 
+-- Publico del articulo. Sin etiqueta queda en unisex (aparece en Hombre y Mujer).
+alter table public.products add column if not exists audience text not null default 'unisex';
+update public.products set audience = 'unisex' where audience is null or audience = '';
+alter table public.products drop constraint if exists products_audience_check;
+alter table public.products
+  add constraint products_audience_check
+  check (audience in ('unisex', 'hombre', 'mujer'));
+
 -- Guia de talles: clave generica por categoria + override editable (jsonb).
 alter table public.products add column if not exists size_guide_key text;
 alter table public.products add column if not exists size_measurements jsonb;
@@ -29,6 +37,7 @@ update public.products
 set size_guide_key = case
   when lower(category) = 'calzado' then 'calzado'
   when lower(category) = 'pantalones' then 'inferior'
+  when lower(category) = 'ropa interior' then 'interior'
   when lower(category) in ('remeras', 'camisas', 'abrigos') then 'superior'
   when lower(category) = 'accesorios' then 'unico'
   else ''
@@ -96,7 +105,7 @@ where category = 'Indumentaria';
 
 alter table public.products
   add constraint products_category_check
-  check (category in ('Remeras', 'Camisas', 'Pantalones', 'Abrigos', 'Calzado', 'Accesorios'));
+  check (category in ('Remeras', 'Camisas', 'Pantalones', 'Abrigos', 'Calzado', 'Accesorios', 'Ropa interior'));
 
 alter table public.products enable row level security;
 alter table public.profiles enable row level security;
@@ -266,25 +275,39 @@ revoke all on function public.admin_update_order_status(uuid, text) from public,
 grant execute on function public.admin_update_order_status(uuid, text) to authenticated;
 
 -- Catálogo de ejemplo. Cambiá o eliminá estos artículos desde el panel de administración.
-insert into public.products (name, description, category, price, stock, image_url, sizes, color, featured, purchased_at)
+insert into public.products (name, description, category, audience, price, stock, image_url, sizes, color, featured, purchased_at)
 select seed.* from (values
-('Campera Siena', 'Abrigo liviano con interior suave y calce relajado. Ideal para media estación.', 'Abrigos', 68900, 7, 'https://images.pexels.com/photos/14330778/pexels-photo-14330778.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Arena', true, now()),
-('Remera Esencial', 'Algodón pesado de tacto suave, corte recto y pensada para todos los días.', 'Remeras', 24900, 12, 'https://images.pexels.com/photos/6786614/pexels-photo-6786614.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Blanco', true, now()),
-('Mochila Urbana', 'Espacio para lo esencial, diseño simple y resistente para el día a día.', 'Accesorios', 54900, 5, 'https://images.pexels.com/photos/12477384/pexels-photo-12477384.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Oliva', true, now()),
-('Zapatillas Alba', 'Una silueta clásica y cómoda para acompañarte de la mañana a la noche.', 'Calzado', 79900, 4, 'https://images.pexels.com/photos/33353887/pexels-photo-33353887.jpeg?auto=compress&cs=tinysrgb&w=1000', array['36','37','38','39','40'], 'Coral', false, now()),
-('Pantalón Nube', 'Tiro alto y caída fluida. Un básico que combina con todo.', 'Pantalones', 45900, 2, 'https://images.pexels.com/photos/14200504/pexels-photo-14200504.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Negro', false, now()),
-('Buzo Monte', 'Frisa suave para los días frescos y las tardes largas.', 'Abrigos', 58900, 6, 'https://images.pexels.com/photos/5789010/pexels-photo-5789010.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Tostado', true, now()),
-('Gorra Brisa', 'Visera curva, hebilla regulable y onda relajada.', 'Accesorios', 18900, 9, 'https://images.pexels.com/photos/7562957/pexels-photo-7562957.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Crudo', false, now()),
-('Sandalias Costa', 'Livianas y versátiles para acompañar el verano.', 'Calzado', 32900, 0, 'https://images.pexels.com/photos/23692992/pexels-photo-23692992.jpeg?auto=compress&cs=tinysrgb&w=1000', array['37','38','39','40'], 'Suela', false, now()),
-('Camisa Oliva', 'Textura natural, botones de madera y calce amplio. Para usar abierta o cerrada.', 'Camisas', 41900, 5, 'https://images.pexels.com/photos/17476810/pexels-photo-17476810.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Oliva', false, now() - interval '212 days'),
-('Tote Mercado', 'Bolso amplio de lona para llevar un poco de todo.', 'Accesorios', 15900, 10, 'https://images.pexels.com/photos/17836626/pexels-photo-17836626.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Natural', false, now()),
-('Botitas Sur', 'Clásicas, cómodas y listas para caminar la ciudad.', 'Calzado', 89900, 1, 'https://images.pexels.com/photos/19750710/pexels-photo-19750710.jpeg?auto=compress&cs=tinysrgb&w=1000', array['36','37','38','39'], 'Marrón', false, now() - interval '248 days'),
-('Chaleco Clara', 'Una capa liviana para sumar abrigo sin perder comodidad.', 'Abrigos', 52900, 2, 'https://images.pexels.com/photos/9904108/pexels-photo-9904108.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Crema', false, now())
-) as seed(name, description, category, price, stock, image_url, sizes, color, featured, purchased_at)
+('Campera Siena', 'Abrigo liviano con interior suave y calce relajado. Ideal para media estación.', 'Abrigos', 'unisex', 68900, 7, 'https://images.pexels.com/photos/14330778/pexels-photo-14330778.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Arena', true, now()),
+('Remera Esencial', 'Algodón pesado de tacto suave, corte recto y pensada para todos los días.', 'Remeras', 'unisex', 24900, 12, 'https://images.pexels.com/photos/6786614/pexels-photo-6786614.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Blanco', true, now()),
+('Mochila Urbana', 'Espacio para lo esencial, diseño simple y resistente para el día a día.', 'Accesorios', 'unisex', 54900, 5, 'https://images.pexels.com/photos/12477384/pexels-photo-12477384.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Oliva', true, now()),
+('Zapatillas Alba', 'Una silueta clásica y cómoda para acompañarte de la mañana a la noche.', 'Calzado', 'unisex', 79900, 4, 'https://images.pexels.com/photos/33353887/pexels-photo-33353887.jpeg?auto=compress&cs=tinysrgb&w=1000', array['36','37','38','39','40'], 'Coral', false, now()),
+('Pantalón Nube', 'Tiro alto y caída fluida. Un básico que combina con todo.', 'Pantalones', 'mujer', 45900, 2, 'https://images.pexels.com/photos/14200504/pexels-photo-14200504.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Negro', false, now()),
+('Buzo Monte', 'Frisa suave para los días frescos y las tardes largas.', 'Abrigos', 'hombre', 58900, 6, 'https://images.pexels.com/photos/5789010/pexels-photo-5789010.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Tostado', true, now()),
+('Gorra Brisa', 'Visera curva, hebilla regulable y onda relajada.', 'Accesorios', 'unisex', 18900, 9, 'https://images.pexels.com/photos/7562957/pexels-photo-7562957.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Crudo', false, now()),
+('Sandalias Costa', 'Livianas y versátiles para acompañar el verano.', 'Calzado', 'mujer', 32900, 0, 'https://images.pexels.com/photos/23692992/pexels-photo-23692992.jpeg?auto=compress&cs=tinysrgb&w=1000', array['37','38','39','40'], 'Suela', false, now()),
+('Camisa Oliva', 'Textura natural, botones de madera y calce amplio. Para usar abierta o cerrada.', 'Camisas', 'hombre', 41900, 5, 'https://images.pexels.com/photos/17476810/pexels-photo-17476810.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Oliva', false, now() - interval '212 days'),
+('Tote Mercado', 'Bolso amplio de lona para llevar un poco de todo.', 'Accesorios', 'unisex', 15900, 10, 'https://images.pexels.com/photos/17836626/pexels-photo-17836626.jpeg?auto=compress&cs=tinysrgb&w=1000', array['Único'], 'Natural', false, now()),
+('Botitas Sur', 'Clásicas, cómodas y listas para caminar la ciudad.', 'Calzado', 'mujer', 89900, 1, 'https://images.pexels.com/photos/19750710/pexels-photo-19750710.jpeg?auto=compress&cs=tinysrgb&w=1000', array['36','37','38','39'], 'Marrón', false, now() - interval '248 days'),
+('Chaleco Clara', 'Una capa liviana para sumar abrigo sin perder comodidad.', 'Abrigos', 'unisex', 52900, 2, 'https://images.pexels.com/photos/9904108/pexels-photo-9904108.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Crema', false, now()),
+('Boxer Tierra', 'Boxer de algodón con elastano, cintura cómoda y calce libre.', 'Ropa interior', 'hombre', 14900, 8, 'https://images.pexels.com/photos/17459893/pexels-photo-17459893.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L','XL'], 'Arena', false, now()),
+('Bombachón Arena', 'Bombachón de algodón suave, tiro alto y terminaciones textiles.', 'Ropa interior', 'mujer', 18900, 6, 'https://images.pexels.com/photos/11010391/pexels-photo-11010391.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Tostado', false, now()),
+('Pack Básico x3', 'Set de tres piezas lisas, cómodas y para usar todos los días.', 'Ropa interior', 'unisex', 29900, 4, 'https://images.pexels.com/photos/11010388/pexels-photo-11010388.jpeg?auto=compress&cs=tinysrgb&w=1000', array['S','M','L'], 'Crudo', false, now())
+) as seed(name, description, category, audience, price, stock, image_url, sizes, color, featured, purchased_at)
 where not exists (
   select 1 from public.products existing
   where existing.name = seed.name and existing.color = seed.color
 );
+
+update public.products
+set size_guide_key = case
+  when lower(category) = 'calzado' then 'calzado'
+  when lower(category) = 'pantalones' then 'inferior'
+  when lower(category) = 'ropa interior' then 'interior'
+  when lower(category) in ('remeras', 'camisas', 'abrigos') then 'superior'
+  when lower(category) = 'accesorios' then 'unico'
+  else ''
+end
+where size_guide_key is null and category is not null;
 
 -- Imágenes de productos: bucket público de lectura y escritura solo para admin.
 -- El panel sube los archivos acá y guarda la URL pública en products.image_url.

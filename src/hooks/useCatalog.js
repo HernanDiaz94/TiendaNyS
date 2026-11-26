@@ -28,14 +28,22 @@ export function useCatalog({ includeInactive = false } = {}) {
   const [error, setError] = useState('');
   const mounted = useRef(true);
   const supportsSizeGuides = useRef(true);
+  const supportsAudience = useRef(true);
 
-  // Hasta ejecutar add-size-guides.sql, PostgREST rechaza las columnas nuevas.
+  // Hasta ejecutar las migraciones, PostgREST rechaza las columnas nuevas.
   // En ese caso las omitimos para no romper el CRUD existente; la tienda igual
-  // muestra la guía genérica según la categoría.
-  function withoutSizeGuides(record) {
-    if (supportsSizeGuides.current) return record;
-    const { size_guide_key: _key, size_measurements: _measurements, ...rest } = record;
-    return rest;
+  // muestra la guía genérica según la categoría y trata sin etiqueta como unisex.
+  function withoutNewColumns(record) {
+    let result = record;
+    if (!supportsSizeGuides.current) {
+      const { size_guide_key: _key, size_measurements: _measurements, ...rest } = result;
+      result = rest;
+    }
+    if (!supportsAudience.current) {
+      const { audience: _audience, ...rest } = result;
+      result = rest;
+    }
+    return result;
   }
 
   const load = useCallback(async ({ silent = false } = {}) => {
@@ -63,12 +71,18 @@ export function useCatalog({ includeInactive = false } = {}) {
       const rows = data || [];
       if (rows.length > 0) {
         supportsSizeGuides.current = Object.prototype.hasOwnProperty.call(rows[0], 'size_guide_key');
+        supportsAudience.current = Object.prototype.hasOwnProperty.call(rows[0], 'audience');
       } else {
-        const { error: probeError } = await supabase
+        const { error: guidesError } = await supabase
           .from('products')
           .select('size_guide_key')
           .limit(1);
-        supportsSizeGuides.current = !probeError;
+        const { error: audienceError } = await supabase
+          .from('products')
+          .select('audience')
+          .limit(1);
+        supportsSizeGuides.current = !guidesError;
+        supportsAudience.current = !audienceError;
       }
       setProducts(rows);
       setError('');
@@ -97,7 +111,7 @@ export function useCatalog({ includeInactive = false } = {}) {
 
     const { data, error: requestError } = await supabase
       .from('products')
-      .insert(withoutSizeGuides(record))
+      .insert(withoutNewColumns(record))
       .select()
       .single();
 
@@ -115,7 +129,7 @@ export function useCatalog({ includeInactive = false } = {}) {
 
     const { data, error: requestError } = await supabase
       .from('products')
-      .update(withoutSizeGuides(patch))
+      .update(withoutNewColumns(patch))
       .eq('id', id)
       .select()
       .single();

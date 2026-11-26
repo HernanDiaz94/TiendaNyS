@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Check, MapPin, Minus, Plus, RefreshCw, Ruler, ShoppingBag, Truck, X } from 'lucide-react';
 
 import { buildWhatsAppUrl, formatPrice } from '../lib/shop.js';
-import { sortSizes, stockState } from '../lib/products.js';
+import { normalizeAudience, sortSizes, stockState } from '../lib/products.js';
 import { resolveSizeGuide } from '../lib/sizeGuides.js';
 import { Modal } from './Modal.jsx';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
@@ -14,6 +14,7 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
   }, [product]);
 
   const sizeGuide = useMemo(() => resolveSizeGuide(product), [product]);
+  const audience = normalizeAudience(product?.audience);
 
   const [size, setSize] = useState(sizes[0] || 'Único');
   const [quantity, setQuantity] = useState(1);
@@ -74,7 +75,9 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
 
           <div className="pdp-info">
             <p className="eyebrow pdp-overline">
-              {product.category}{product.color ? ` · ${product.color}` : ''}
+              {product.category}
+              {audience !== 'unisex' ? ` · ${audience === 'hombre' ? 'Hombre' : 'Mujer'}` : ''}
+              {product.color ? ` · ${product.color}` : ''}
             </p>
             <h2 id="pdp-title">{product.name}</h2>
 

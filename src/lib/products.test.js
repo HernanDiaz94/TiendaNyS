@@ -3,6 +3,7 @@ import {
   filterProducts,
   getCatalogCategories,
   getCatalogSizes,
+  normalizeAudience,
   normalizeProductDraft,
   parseSizes,
   sortSizes,
@@ -52,7 +53,22 @@ const catalog = [
   },
 ];
 
+const audienceCatalog = [
+  { id: 'h', name: 'Camisa', audience: 'hombre', is_active: true },
+  { id: 'm', name: 'Pantalon', audience: 'mujer', is_active: true },
+  { id: 'u', name: 'Gorra', audience: null, is_active: true },
+  { id: 'u2', name: 'Bolso', audience: 'desconocido', is_active: true },
+];
+
 describe('catalog filtering', () => {
+  it('includes unisex products in both Hombre and Mujer', () => {
+    expect(filterProducts(audienceCatalog, { audience: 'hombre' }).map((p) => p.id)).toEqual(['h', 'u', 'u2']);
+    expect(filterProducts(audienceCatalog, { audience: 'mujer' }).map((p) => p.id)).toEqual(['m', 'u', 'u2']);
+    expect(filterProducts(audienceCatalog, { audience: 'Todos' })).toHaveLength(4);
+    expect(normalizeAudience('  HOMBRE ')).toBe('hombre');
+    expect(normalizeAudience(null)).toBe('unisex');
+  });
+
   it('filters by category and ignores inactive products', () => {
     const result = filterProducts(catalog, { category: 'Remeras' });
     expect(result.map((product) => product.id)).toEqual(['1']);
@@ -115,6 +131,12 @@ describe('product validation', () => {
 
   it('requires at least one size', () => {
     expect(validateProduct({ ...valid, sizes: [] })).toHaveProperty('sizes');
+  });
+
+  it('defaults the audience to unisex and rejects unknown labels', () => {
+    expect(normalizeProductDraft(valid).audience).toBe('unisex');
+    expect(normalizeProductDraft({ ...valid, audience: 'HOMBRE' }).audience).toBe('hombre');
+    expect(validateProduct({ ...valid, audience: 'nino' })).toHaveProperty('audience');
   });
 
   it('rejects unsafe or malformed image URLs', () => {

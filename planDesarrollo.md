@@ -20,7 +20,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - **Estilos:** CSS vanilla (paleta tierra suave)
 - **Backend:** Supabase (opcional, modo demo con localStorage)
 - **Hosting:** Vercel (deploy automático desde GitHub)
-- **Testing:** Vitest (65 tests)
+- **Testing:** Vitest (75 tests)
 
 ---
 
@@ -112,6 +112,9 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/admin/PurchaseForm.jsx` | Registro de compras (lote, costo, proveedor, fecha) |
 | `src/hooks/usePurchases.js` | Historial de compras (Supabase o demo) |
 | `src/lib/inventory.js` | Antigüedad de stock, validación de compras y alerta de +6 meses |
+| `src/admin/ProfitReport.jsx` | Pestaña Rentabilidad (utilidad FIFO, mark-up, margen y stock valuado) |
+| `src/lib/lots.js` / `src/lib/profit.js` | Asignación FIFO de lotes y cálculo del informe (con tests) |
+| `supabase/add-cost-tracking-step1.sql` / `step2.sql` | Migración aplicada en Supabase; bloque completo en `add-cost-tracking.sql` |
 
 ---
 
@@ -439,6 +442,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [x] **Control de compra de productos en admin:** Compras vinculadas al stock (cantidad, proveedor, costo)
 - [x] **Fecha de compra de producto:** Fecha de ingreso por artículo y por lote
 - [x] **Alerta de inventario antiguo:** Aviso para productos con más de 6 meses en inventario
+- [x] **Rentabilidad contable exacta:** pestaña «Rentabilidad» en `/admin` con utilidad por unidad vendida usando lotes FIFO y costo real por lote; muestra ganancia $, % sobre costo (mark-up) y % sobre precio (margen), detalle por pedido y stock valuado. Migración ejecutada el 26/11/2026 en dos pasos (`supabase/add-cost-tracking-step1.sql` y `supabase/add-cost-tracking-step2.sql`), con el bloque completo sincronizado en `supabase/add-cost-tracking.sql` y `supabase/schema.sql`
 
 **Usuario admin Supabase (completado 22/11/2026):**
 - [x] Usuario `hernan.diiaz@gmail.com` creado en **Supabase → Authentication → Users** con contraseña, rol `admin` asignado en `public.profiles` y login verificado en `/admin`. Ya no aplican las credenciales demo (`admin` / `nys-demo`) mientras Supabase esté activo.
@@ -475,7 +479,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 65 tests
+npm test             # Ejecuta 75 tests
 
 # Build
 npm run build        # Genera dist/ + 12 páginas SEO de producto (postbuild; 15 tras la migración de audience)
@@ -504,8 +508,9 @@ git push origin --tags            # Subir tags a GitHub
 - **Supabase:** ref `asqfokknkuciricvbpyn`, esquema ejecutado, 15 productos activos, RLS/funciones activas. `add-size-guides.sql` y `add-audience-and-underwear.sql` ejecutados y verificados (guías asignadas y `audience` con 3 / 4 / 8). Variables en Vercel (Production, Preview, Development). Usuario admin `hernan.diiaz@gmail.com` con rol `admin`, login verificado con correo y alias **`hernan`**.
 - **Analytics:** Vercel Web Analytics habilitado y verificado (excluye `/admin`), sin cookies ni GA4.
 - **Guía de talles:** desplegable en el modal con tablas por categoría (incluye `interior`) y editor en el admin. Verificado en `/producto/botitas-sur/` (guía Calzado, 9 filas) y `/producto/boxer-tierra/` (guía Ropa interior, 6 filas).
-- **Tests:** 65/65 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔ (`tienda-gh3dd2hfv-hernan-d-team.vercel.app`) · SEO regenerado con las 3 descripciones acentuadas.
-- Repositorio limpio y sincronizado con `origin/main` (`.env` no versionado).
+- **Rentabilidad (implementada y migrada):** pestaña en `/admin` con informe FIFO por lote: ventas, costo conocido, ganancia, mark-up/margen, detalle por pedido y stock valuado. El stock anterior se registra como lote de apertura sin costo y se excluye de la utilidad. En demo: compra de 4 u. a $10.000 + ventas de 1 y 6 u. → 5 u. de apertura sin costo y 2 u. con costo, ganancia $63.800; al cancelar el pedido se devuelven las unidades a su lote original. Migración ejecutada en Supabase y verificada por API: `public.order_item_lots` existe con RLS y grant solo para `authenticated`, columnas nuevas en `purchases`, y las 3 funciones activas (`register_purchase`, `place_order`, `admin_update_order_status`).
+- **Tests:** 75/75 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔ (`tienda-2b8kwbcg0-hernan-d-team.vercel.app`) · SEO regenerado con 15 páginas y sitemap de 16 URLs.
+- Cambios de rentabilidad migrados, verificados en API, desplegados, commiteados y pusheados. (`.env` no versionado.)
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**. MercadoPago sigue sin tocarse.
 
 *Documento actualizado manualmente. Última actualización: 26 de Noviembre, 2026*

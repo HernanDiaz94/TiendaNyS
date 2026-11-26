@@ -29,6 +29,7 @@ import {
   listStaleProducts,
 } from '../lib/inventory.js';
 import { normalizeText } from '../lib/products.js';
+import { ProfitReport } from './ProfitReport.jsx';
 import { ProductForm } from './ProductForm.jsx';
 import { PurchaseForm } from './PurchaseForm.jsx';
 import { Modal } from '../components/Modal.jsx';
@@ -102,13 +103,31 @@ export function AdminPanel({ session, isDemo, onLogout }) {
     setOrdersError('');
     try {
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase
+        let response = await supabase
           .from('orders')
-          .select('*, order_items(*)')
+          .select('*, order_items(*, order_item_lots(*))')
           .order('created_at', { ascending: false })
           .limit(250);
-        if (error) throw error;
-        setOrders(data || []);
+        if (response.error && /order_item_lots/.test(response.error.message || '')) {
+          response = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .order('created_at', { ascending: false })
+            .limit(250);
+        }
+        if (response.error) throw response.error;
+        setOrders((response.data || []).map((order) => ({
+          ...order,
+          order_items: (order.order_items || []).map((item) => ({
+            ...item,
+            lot_allocations: (item.order_item_lots || []).map((lot) => ({
+              purchase_id: lot.purchase_id,
+              quantity: lot.quantity,
+              unit_cost: lot.unit_cost,
+              is_opening: lot.is_opening,
+            })),
+          })),
+        })));
       } else {
         setOrders(listDemoOrders());
       }
@@ -204,7 +223,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
       showFeedback(
         'success',
         status === 'cancelado'
-          ? 'Pedido cancelado. El stock volvió al catálogo.'
+          ? 'Pedido cancelado. El stock y los lotes volvieron al catálogo.'
           : 'Estado del pedido actualizado.',
       );
       if (status === 'cancelado') catalog.refresh({ silent: true });
@@ -454,6 +473,15 @@ export function AdminPanel({ session, isDemo, onLogout }) {
             onClick={() => setTab('purchases')}
           >
             Compras <span>{purchasesLog.purchases.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'profit'}
+            className={tab === 'profit' ? 'active' : ''}
+            onClick={() => setTab('profit')}
+          >
+            Rentabilidad
           </button>
         </div>
 
@@ -778,6 +806,13 @@ export function AdminPanel({ session, isDemo, onLogout }) {
               </div>
             )}
           </section>
+        ) : tab === 'profit' ? (
+          <ProfitReport
+            orders={orders}
+            products={catalog.products}
+            purchases={purchasesLog.purchases}
+            loading={ordersLoading || catalog.loading || purchasesLog.loading}
+          />
         ) : (
           <section className="admin-section" role="tabpanel">
             <div className="admin-section-head">
@@ -829,6 +864,9 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                         <span>
                           {purchase.quantity} u.
                           {cost !== null ? ` × ${formatPrice(cost)}` : ' · sin costo'}
+                          {purchase.remaining_quantity !== undefined
+                            ? ` · quedan ${purchase.remaining_quantity} u.`
+                            : ''}
                         </span>
                         <strong>{cost !== null ? formatPrice(cost * purchase.quantity) : '—'}</strong>
                       </div>

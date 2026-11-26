@@ -1,5 +1,10 @@
 import { demoProducts } from '../data/demoProducts.js';
 import { nextPurchasedAt } from './inventory.js';
+import {
+  allocateLots,
+  restoreAllocatedLots,
+  withOpeningLots,
+} from './lots.js';
 
 const VALID_AUDIENCES = new Set(['unisex', 'hombre', 'mujer']);
 
@@ -195,6 +200,7 @@ export function listDemoOrders() {
 
 export function createDemoOrder({ customer, items }) {
   const products = readDemoProducts();
+  const purchasePool = readDemoPurchases().map((purchase) => ({ ...purchase }));
   const byId = new Map(products.map((product) => [String(product.id), product]));
   const normalized = [];
   const decrements = new Map();
@@ -225,6 +231,18 @@ export function createDemoOrder({ customer, items }) {
     }
 
     const unitPrice = Number(product.price);
+    const { allocations, remainingById } = allocateLots(
+      purchasePool.filter((lot) => String(lot.product_id) === String(product.id)),
+      quantity,
+    );
+    for (const [lotId, remaining] of remainingById) {
+      const index = purchasePool.findIndex((lot) => String(lot.id) === lotId);
+      if (index !== -1) purchasePool[index] = {
+        ...purchasePool[index],
+        remaining_quantity: remaining,
+      };
+    }
+
     total += unitPrice * quantity;
     decrements.set(product.id, (decrements.get(product.id) || 0) + quantity);
     normalized.push({
@@ -234,6 +252,7 @@ export function createDemoOrder({ customer, items }) {
       size,
       quantity,
       unit_price: unitPrice,
+      lot_allocations: allocations,
     });
   }
 
@@ -243,6 +262,7 @@ export function createDemoOrder({ customer, items }) {
     return { ...product, stock: Math.max(0, Number(product.stock) - reserved) };
   });
   writeDemoProducts(updated);
+  writeDemoPurchases(purchasePool);
 
   const order = {
     id: makeId(),
@@ -270,15 +290,19 @@ export function updateDemoOrderStatus(id, status) {
   if (status === 'cancelado') {
     const products = readDemoProducts();
     const restored = new Map();
+    const allocations = [];
     for (const item of orders[index].order_items || []) {
-      if (!item.product_id) continue;
-      restored.set(item.product_id, (restored.get(item.product_id) || 0) + item.quantity);
+      if (item.product_id) {
+        restored.set(item.product_id, (restored.get(item.product_id) || 0) + item.quantity);
+      }
+      if (Array.isArray(item.lot_allocations)) allocations.push(...item.lot_allocations);
     }
     writeDemoProducts(products.map((product) => {
       const quantity = restored.get(product.id) || 0;
       if (!quantity) return product;
       return { ...product, stock: Math.min(9999, Number(product.stock) + quantity) };
     }));
+    writeDemoPurchases(restoreAllocatedLots(readDemoPurchases(), allocations));
   }
 
   orders[index] = { ...orders[index], status };
@@ -286,19 +310,29 @@ export function updateDemoOrderStatus(id, status) {
   return orders[index];
 }
 
-function readDemoPurchases() {
-  const raw = readRaw(PURCHASES_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 function writeDemoPurchases(purchases) {
   writeRaw(PURCHASES_KEY, JSON.stringify(purchases));
+}
+
+export function readDemoPurchases() {
+  const raw = readRaw(PURCHASES_KEY);
+  let parsed = [];
+  if (raw) {
+    try {
+      const value = JSON.parse(raw);
+      if (Array.isArray(value)) parsed = value;
+    } catch {
+      /* fall back to normalized empty list */
+    }
+  }
+  const normalized = withOpeningLots(parsed, readDemoProducts());
+  const changed = normalized.length !== parsed.length
+    || normalized.some((purchase, index) => (
+      purchase.remaining_quantity !== parsed[index]?.remaining_quantity
+      || purchase.is_opening !== parsed[index]?.is_opening
+    ));
+  if (changed) writeDemoPurchases(normalized);
+  return normalized;
 }
 
 export function listDemoPurchases() {
@@ -337,10 +371,12 @@ export function createDemoPurchase({ productId, quantity, unitCost, supplier, pu
     product_id: product.id,
     product_name: product.name,
     quantity: amount,
+    remaining_quantity: amount,
     unit_cost: cost,
     supplier: supplierName,
     purchased_at: entryDate,
     created_at: new Date().toISOString(),
+    is_opening: false,
   };
   writeDemoPurchases([purchase, ...readDemoPurchases()]);
   return { product: updated, purchase };

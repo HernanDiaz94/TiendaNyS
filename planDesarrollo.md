@@ -231,7 +231,7 @@ Se agregó una guía **genérica por categoría**, sin inventar medidas propias:
 - **Categoría nueva `Ropa interior`** con 3 ejemplos: `Boxer Tierra` (hombre), `Bombachón Arena` (mujer) y `Pack Básico x3` (unisex). Fotos Pexels revisadas, aptas para un catálogo familiar (prendas dobladas o sobre textiles, sin modelos en ropa interior).
 - **Guía propia** `interior` con columnas cintura / cadera / AR, talles XS a XXL.
 - **Migración pendiente:** `supabase/add-audience-and-underwear.sql` (ASCII-only e idempotente). La ejecuta el usuario en el SQL Editor. Hasta entonces Supabase muestra 12 productos y todo se trata como unisex; el modo demo ya muestra los 15.
-- **Verificado:** 65/65 tests, build y postbuild OK, deploy Ready, chips visibles en producción y sin errores de consola.
+- **Verificado:** 65/65 tests, build y postbuild OK, deploy Ready, chips visibles en producción y sin errores de consola. En **modo demo** (`.env.local` temporal sin Supabase, ya eliminado): 15 tarjetas en `Todos`, 11 en `Hombre`, 12 en `Mujer`; `/producto/boxer-tierra/` abre con etiqueta **HOMBRE** y guía **Ropa interior** de 6 filas. El `localStorage` con 12 productos se migró solo y agregó los 3 nuevos sin borrar stock.
 
 ---
 

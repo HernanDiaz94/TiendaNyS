@@ -333,20 +333,20 @@ as $$declare
   v_when timestamptz := coalesce(p_purchased_at, now());
   v_updated integer := 0;
 begin
-  if not public.is_store_admin() then raise exception 'NOT_ADMIN'; end if
+  if not public.is_store_admin() then raise exception 'NOT_ADMIN'; end if;
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
     raise exception 'INVALID_SIZE';
-  end if
+  end if;
   v_size := btrim(p_size);
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
     raise exception 'INVALID_COST';
-  end if
+  end if;
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
     raise exception 'INVALID_SUPPLIER';
-  end if
+  end if;
   if v_when > now() + interval '1 day' or v_when < timestamptz '2000-01-01' then
     raise exception 'INVALID_DATE';
-  end if
+  end if;
 
   update public.purchases
      set unit_cost = p_unit_cost,
@@ -357,7 +357,7 @@ begin
    where product_id = p_product_id and size = v_size
      and is_opening = true and remaining_quantity > 0;
   get diagnostics v_updated = row_count;
-  if v_updated < 1 then raise exception 'NO_OPENING_STOCK'; end if
+  if v_updated < 1 then raise exception 'NO_OPENING_STOCK'; end if;
 
   update public.product_sizes
      set purchased_at = v_when

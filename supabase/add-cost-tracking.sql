@@ -688,20 +688,20 @@ as E'declare
   v_when timestamptz := coalesce(p_purchased_at, now())\073
   v_updated integer := 0\073
 begin
-  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if
+  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if\073
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
     raise exception \'INVALID_SIZE\'\073
-  end if
+  end if\073
   v_size := btrim(p_size)\073
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
     raise exception \'INVALID_COST\'\073
-  end if
+  end if\073
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
     raise exception \'INVALID_SUPPLIER\'\073
-  end if
+  end if\073
   if v_when > now() + interval \'1 day\' or v_when < timestamptz \'2000-01-01\' then
     raise exception \'INVALID_DATE\'\073
-  end if
+  end if\073
 
   update public.purchases
      set unit_cost = p_unit_cost,
@@ -712,7 +712,7 @@ begin
    where product_id = p_product_id and size = v_size
      and is_opening = true and remaining_quantity > 0\073
   get diagnostics v_updated = row_count\073
-  if v_updated < 1 then raise exception \'NO_OPENING_STOCK\'\073 end if
+  if v_updated < 1 then raise exception \'NO_OPENING_STOCK\'\073 end if\073
 
   update public.product_sizes
      set purchased_at = v_when

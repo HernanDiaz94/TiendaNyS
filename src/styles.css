@@ -4845,3 +4845,139 @@ a {
     animation: none;
   }
 }
+
+/* Stock por talle y publicacion con costo */
+.size-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.size-stock-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.size-stock-grid label span {
+  min-width: 34px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.size-stock-grid input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 12px;
+}
+
+.size-stock-list {
+  grid-area: stock;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  justify-self: start;
+}
+
+.size-stock-list span {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.size-stock-list strong {
+  color: var(--text);
+}
+
+.card-sizes button:disabled,
+.pdp-sizes button:disabled,
+.size-picker button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.bulk-cost-common {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.bulk-cost-common label,
+.bulk-cost-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bulk-cost-common label span,
+.bulk-cost-row label span {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bulk-cost-common input,
+.bulk-cost-row input {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 12px;
+}
+
+.bulk-cost-list {
+  display: grid;
+  gap: 8px;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.bulk-cost-row {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.bulk-cost-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.bulk-cost-row strong {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bulk-cost-row > div span {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .bulk-cost-row {
+    grid-template-columns: 1fr;
+  }
+}

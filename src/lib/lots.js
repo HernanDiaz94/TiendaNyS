@@ -111,6 +111,7 @@ function normalizePurchaseRow(row) {
   const remaining = row?.remaining_quantity;
   return {
     ...row,
+    size: String(row?.size ?? 'Único').trim() || 'Único',
     remaining_quantity: remaining === null || remaining === undefined
       ? 0
       : Math.max(0, Math.trunc(Number(remaining) || 0)),
@@ -120,34 +121,46 @@ function normalizePurchaseRow(row) {
 }
 
 /**
- * Normaliza compras guardadas y crea, una sola vez por producto con stock,
- * un lote de apertura sin costo para no perder el historial de ventas.
+ * Normaliza compras guardadas y crea un lote de apertura sin costo por cada
+ * (producto, talle) con stock, para no perder el historial de ventas.
  */
 export function withOpeningLots(purchases, products) {
   const rows = (Array.isArray(purchases) ? purchases : []).map(normalizePurchaseRow);
+  // Si ya existe cualquier lote para el (producto, talle), no inventamos otro:
+  // ese lote (apertura o compra con costo) es el que explica el stock actual.
   const opened = new Set(
     rows
-      .filter((row) => row.is_opening && row.product_id !== null && row.product_id !== undefined)
-      .map((row) => String(row.product_id)),
+      .filter((row) => row.product_id !== null && row.product_id !== undefined)
+      .map((row) => `${String(row.product_id)}::${String(row.size).toLowerCase()}`),
   );
   const additions = [];
 
   for (const product of Array.isArray(products) ? products : []) {
-    const stock = normalizeQuantity(product?.stock);
-    const key = String(product?.id);
-    if (stock < 1 || opened.has(key)) continue;
-    additions.push({
-      id: `opening-${key}`,
-      product_id: product.id,
-      product_name: product.name || '',
-      quantity: stock,
-      remaining_quantity: stock,
-      unit_cost: null,
-      supplier: 'Apertura',
-      purchased_at: product.purchased_at || product.created_at || new Date().toISOString(),
-      created_at: product.created_at || new Date().toISOString(),
-      is_opening: true,
-    });
+    const bySize = product?.stock_by_size;
+    const entries = bySize && typeof bySize === 'object' && !Array.isArray(bySize)
+      ? Object.entries(bySize)
+      : [[String(product?.sizes?.[0] || 'Único'), product?.stock]];
+    const when = product.purchased_at || product.created_at || new Date().toISOString();
+
+    for (const [size, value] of entries) {
+      const stock = normalizeQuantity(value);
+      const key = `${String(product?.id)}::${String(size).toLowerCase()}`;
+      if (stock < 1 || opened.has(key)) continue;
+      opened.add(key);
+      additions.push({
+        id: `opening-${String(product?.id)}-${String(size)}`,
+        product_id: product.id,
+        product_name: product.name || '',
+        size: String(size),
+        quantity: stock,
+        remaining_quantity: stock,
+        unit_cost: null,
+        supplier: 'Apertura',
+        purchased_at: when,
+        created_at: product.created_at || when,
+        is_opening: true,
+      });
+    }
   }
 
   return [...rows, ...additions];

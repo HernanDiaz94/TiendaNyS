@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
-  STALE_STOCK_DAYS,
   daysInStock,
+  hasCostedPurchase,
+  isCostedPurchase,
   isStaleStock,
-  listStaleProducts,
   monthsInStock,
+  listStaleProducts,
   nextPurchasedAt,
   normalizePurchase,
+  sizeHasCost,
+  STALE_STOCK_DAYS,
   validatePurchase,
 } from './inventory.js';
 
@@ -30,9 +33,14 @@ describe('inventory aging', () => {
     expect(listStaleProducts([stale, fresh, soldOut], { now: NOW })).toEqual([stale]);
   });
 
-  it('keeps the oldest date while old stock remains', () => {
-    const product = { stock: 4, purchased_at: daysAgo(300) };
-    expect(nextPurchasedAt(product, daysAgo(1))).toBe(product.purchased_at);
+  it('keeps the oldest date while that size still has stock', () => {
+    const product = {
+      stock: 4,
+      stock_by_size: { XL: 4, XXL: 0 },
+      purchased_at: daysAgo(300),
+    };
+    expect(nextPurchasedAt(product, daysAgo(1), 'XL')).toBe(product.purchased_at);
+    expect(nextPurchasedAt(product, daysAgo(1), 'XXL')).toBe(new Date(daysAgo(1)).toISOString());
     expect(nextPurchasedAt({ stock: 0, purchased_at: daysAgo(300) }, daysAgo(1)))
       .toBe(new Date(daysAgo(1)).toISOString());
   });
@@ -41,14 +49,28 @@ describe('inventory aging', () => {
 describe('purchase validation', () => {
   const valid = {
     productId: 'prod-1',
+    size: 'XL',
     quantity: 6,
     unitCost: '1250.50',
     supplier: 'Distribuidora Norte',
     purchasedAt: '2026-11-10',
   };
 
-  it('accepts a complete purchase', () => {
+  it('accepts a complete purchase with size and cost', () => {
     expect(validatePurchase(valid)).toEqual({});
+    expect(normalizePurchase(valid)).toMatchObject({
+      productId: 'prod-1',
+      size: 'XL',
+      quantity: 6,
+      unitCost: 1250.5,
+      supplier: 'Distribuidora Norte',
+    });
+  });
+
+  it('requires the size and a real cost before publishing', () => {
+    expect(validatePurchase({ ...valid, size: '' })).toHaveProperty('size');
+    expect(validatePurchase({ ...valid, unitCost: '' })).toHaveProperty('unitCost');
+    expect(validatePurchase({ ...valid, unitCost: null })).toHaveProperty('unitCost');
   });
 
   it('rejects missing product, bad quantity and future dates', () => {
@@ -63,15 +85,27 @@ describe('purchase validation', () => {
     expect(validatePurchase({ ...valid, unitCost: '10.999' })).toHaveProperty('unitCost');
     expect(validatePurchase({ ...valid, supplier: 'x'.repeat(81) })).toHaveProperty('supplier');
   });
+});
 
-  it('normalizes values and allows an empty cost', () => {
-    const normalized = normalizePurchase({ ...valid, unitCost: '' });
-    expect(normalized).toMatchObject({
-      productId: 'prod-1',
-      quantity: 6,
-      unitCost: null,
-      supplier: 'Distribuidora Norte',
-    });
-    expect(Number.isNaN(new Date(normalized.purchasedAt).getTime())).toBe(false);
+describe('cost gate', () => {
+  const purchase = { product_id: 'prod-1', size: 'XL', unit_cost: 1250.5, is_opening: false };
+
+  it('only accepts real purchases with a cost', () => {
+    expect(isCostedPurchase(purchase)).toBe(true);
+    expect(isCostedPurchase({ ...purchase, unit_cost: null })).toBe(false);
+    expect(isCostedPurchase({ ...purchase, is_opening: true })).toBe(false);
+    expect(isCostedPurchase({ ...purchase, supplier: 'Apertura' })).toBe(true);
+  });
+
+  it('checks costs per product and per size', () => {
+    const purchases = [
+      purchase,
+      { product_id: 'prod-1', size: 'XXL', unit_cost: null, is_opening: false },
+      { product_id: 'prod-2', size: 'XL', unit_cost: 900, is_opening: false },
+    ];
+    expect(hasCostedPurchase(purchases, 'prod-1')).toBe(true);
+    expect(hasCostedPurchase(purchases, 'missing')).toBe(false);
+    expect(sizeHasCost(purchases, 'prod-1', 'XL')).toBe(true);
+    expect(sizeHasCost(purchases, 'prod-1', 'XXL')).toBe(false);
   });
 });

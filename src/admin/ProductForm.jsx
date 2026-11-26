@@ -11,6 +11,7 @@ import {
   sortSizes,
   validateProduct,
 } from '../lib/products.js';
+import { sizeHasCost } from '../lib/inventory.js';
 import { uploadProductImage } from '../lib/images.js';
 import { SIZE_GUIDE_CHOICES, createSizeGuide } from '../lib/sizeGuides.js';
 import { Modal } from '../components/Modal.jsx';
@@ -29,7 +30,7 @@ function FormField({ id, label, error, hint, optional, children, full = false })
   );
 }
 
-export function ProductForm({ open, product, onClose, onSave, isDemo }) {
+export function ProductForm({ open, product, purchases = [], onClose, onSave, isDemo }) {
   const isEditing = Boolean(product);
   const [draft, setDraft] = useState(emptyProductDraft);
   const [errors, setErrors] = useState({});
@@ -67,7 +68,11 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
       const sizes = exists
         ? current.sizes.filter((entry) => entry !== size)
         : [...current.sizes, size];
-      return { ...current, sizes };
+      const stockBySize = { ...(current.stock_by_size || {}) };
+      const key = Object.keys(stockBySize).find((entry) => entry.toLowerCase() === size.toLowerCase()) ?? size;
+      if (exists) delete stockBySize[key];
+      else stockBySize[key] = Number(stockBySize[key]) || 0;
+      return { ...current, sizes, stock_by_size: stockBySize };
     });
     setErrors((current) => ({ ...current, sizes: undefined }));
   };
@@ -82,7 +87,11 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
         setErrors((current) => ({ ...current, sizes: 'Podés cargar hasta 20 talles.' }));
         return;
       }
-      setDraft((current) => ({ ...current, sizes: [...current.sizes, clean] }));
+      setDraft((current) => ({
+        ...current,
+        sizes: [...current.sizes, clean],
+        stock_by_size: { ...(current.stock_by_size || {}), [clean]: Number(current.stock_by_size?.[clean]) || 0 },
+      }));
     }
     setCustomSize('');
     setErrors((current) => ({ ...current, sizes: undefined }));
@@ -137,13 +146,15 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
     }
   };
 
-  const submit = async (event) => {
-    event.preventDefault();
+  const submit = async (event, publish = false) => {
+    event?.preventDefault();
     setFormError('');
 
-    const validation = validateProduct(draft, {
+    const values = publish ? { ...draft, is_active: true } : draft;
+    const validation = validateProduct(values, {
       allowDataImages: isDemo,
       maxImageLength: isDemo ? 900000 : 500,
+      allowDraftPrice: !publish,
     });
     setErrors(validation);
 
@@ -153,9 +164,14 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
       return;
     }
 
+    if (publish && missingCostSizes.length > 0) {
+      setFormError(`Cargá una compra con costo para los talles: ${missingCostSizes.join(', ')}.`);
+      return;
+    }
+
     setSaving(true);
     try {
-      await onSave(normalizeProductDraft(draft));
+      await onSave(normalizeProductDraft(values));
     } catch (error) {
       setFormError(error.message || 'No pudimos guardar el artículo.');
     } finally {
@@ -164,6 +180,12 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
   };
 
   const sortedPresets = sortSizes([...SIZE_PRESETS, ...draft.sizes]);
+  const stockBySize = draft.stock_by_size || {};
+  const sizesWithStock = draft.sizes.filter((size) => Number(stockBySize[size]) > 0);
+  const missingCostSizes = sizesWithStock.filter(
+    (size) => !sizeHasCost(purchases, product?.id, size),
+  );
+  const canPublish = Boolean(isEditing) && sizesWithStock.length > 0 && missingCostSizes.length === 0;
   const previewUrl = draft.image_url;
 
   return (
@@ -275,17 +297,36 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
               />
             </FormField>
 
-            <FormField id="product-stock" label="Stock disponible" error={errors.stock}>
-              <input
-                id="product-stock"
-                type="number"
-                min="0"
-                max="9999"
-                step="1"
-                inputMode="numeric"
-                value={draft.stock}
-                onChange={(event) => setField('stock', event.target.value)}
-              />
+            <FormField
+              id="product-stock_by_size"
+              label="Stock por talle"
+              error={errors.stock_by_size}
+              hint="El stock sale de las compras registradas. Ajustalo solo para corregir el inventario actual."
+              full
+            >
+              <div className="size-stock-grid">
+                {draft.sizes.map((size) => {
+                  const key = Object.keys(stockBySize).find((entry) => entry.toLowerCase() === size.toLowerCase()) ?? size;
+                  return (
+                    <label key={size} htmlFor={`stock-${size}`}>
+                      <span>{size}</span>
+                      <input
+                        id={`stock-${size}`}
+                        type="number"
+                        min="0"
+                        max="9999"
+                        step="1"
+                        inputMode="numeric"
+                        value={stockBySize[key] ?? 0}
+                        onChange={(event) => setField('stock_by_size', {
+                          ...stockBySize,
+                          [key]: event.target.value,
+                        })}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
             </FormField>
 
             <FormField id="product-sizes" label="Talles" error={errors.sizes} full>
@@ -479,19 +520,20 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
                   />
                   <span><strong>Destacado</strong> Aparece primero en el catálogo.</span>
                 </label>
-                <label className="check-line">
-                  <input
-                    type="checkbox"
-                    checked={draft.is_active}
-                    onChange={(event) => setField('is_active', event.target.checked)}
-                  />
-                  <span><strong>Visible</strong> Se muestra en la tienda pública.</span>
-                </label>
+                <p className="field-hint">
+                  Estado: <strong>{draft.is_active ? 'Publicado' : 'Borrador'}</strong>.
+                  {' '}Se publica cuando cada talle con stock tiene su compra con costo.
+                </p>
               </div>
             </div>
           </div>
 
           {formError && <ErrorNote>{formError}</ErrorNote>}
+          {missingCostSizes.length > 0 && sizesWithStock.length > 0 && (
+            <Notice tone="info">
+              Sin costo en: {missingCostSizes.join(', ')}. Registrá la compra de esos talles antes de publicar.
+            </Notice>
+          )}
           {isDemo && (
             <Notice tone="info">
               Los cambios se guardan en este navegador. Conectá Supabase para publicarlos online.
@@ -503,10 +545,19 @@ export function ProductForm({ open, product, onClose, onSave, isDemo }) {
           <button type="button" className="btn btn--ghost" onClick={onClose} disabled={saving}>
             Cancelar
           </button>
-          <button type="submit" className="btn btn--primary" disabled={saving || uploading}>
+          <button type="submit" className="btn btn--ghost" disabled={saving || uploading}>
             {saving
               ? <><Spinner label="Guardando" /> Guardando…</>
-              : <><Check size={16} aria-hidden="true" /> {isEditing ? 'Guardar cambios' : 'Crear artículo'}</>}
+              : <><Check size={16} aria-hidden="true" /> {isEditing ? 'Guardar cambios' : 'Guardar borrador'}</>}
+          </button>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={(event) => submit(event, true)}
+            disabled={saving || uploading || !canPublish}
+            title={canPublish ? 'Publicar en el catálogo' : 'Primero guardá el borrador y cargá la compra con costo por talle'}
+          >
+            Publicar
           </button>
         </div>
       </form>

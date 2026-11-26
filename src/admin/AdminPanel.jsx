@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   LogOut,
-  Minus,
   Package,
   PackagePlus,
   Pencil,
@@ -25,10 +24,12 @@ import { listDemoOrders, resetDemoData, updateDemoOrderStatus } from '../lib/dem
 import { buildWhatsAppUrl, formatPrice, shortReference } from '../lib/shop.js';
 import {
   formatShortDate,
+  hasCostedPurchase,
   isStaleStock,
   listStaleProducts,
 } from '../lib/inventory.js';
-import { normalizeText } from '../lib/products.js';
+import { getSizeStock, getTotalStock, normalizeText } from '../lib/products.js';
+import { BulkCostForm } from './BulkCostForm.jsx';
 import { ProfitReport } from './ProfitReport.jsx';
 import { ProductForm } from './ProductForm.jsx';
 import { PurchaseForm } from './PurchaseForm.jsx';
@@ -83,6 +84,8 @@ export function AdminPanel({ session, isDemo, onLogout }) {
   const [deleting, setDeleting] = useState(null);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [purchaseProductId, setPurchaseProductId] = useState('');
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkProductId, setBulkProductId] = useState('');
   const [busyKey, setBusyKey] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -158,17 +161,26 @@ export function AdminPanel({ session, isDemo, onLogout }) {
     [catalog.products],
   );
 
+  const productsWithoutCost = useMemo(
+    () => catalog.products.filter((product) => !hasCostedPurchase(purchasesLog.purchases, product.id)),
+    [catalog.products, purchasesLog.purchases],
+  );
+
   const stats = useMemo(() => {
     const activeOrders = orders.filter((order) => order.status !== 'cancelado');
     return {
       pending: orders.filter((order) => order.status === 'pendiente').length,
       revenue: activeOrders.reduce((sum, order) => sum + Number(order.total || 0), 0),
       products: catalog.products.filter((product) => product.is_active !== false).length,
-      low: catalog.products.filter((product) => Number(product.stock) > 0 && Number(product.stock) <= 2).length,
-      out: catalog.products.filter((product) => Number(product.stock) < 1).length,
+      low: catalog.products.filter((product) => {
+        const stock = getTotalStock(product);
+        return stock > 0 && stock <= 2;
+      }).length,
+      out: catalog.products.filter((product) => getTotalStock(product) < 1).length,
       stale: staleProducts.length,
+      noCost: productsWithoutCost.length,
     };
-  }, [orders, catalog.products, staleProducts]);
+  }, [orders, catalog.products, staleProducts, productsWithoutCost]);
 
   const filteredOrders = useMemo(() => {
     const query = normalizeText(orderQuery);
@@ -189,14 +201,18 @@ export function AdminPanel({ session, isDemo, onLogout }) {
     return catalog.products.filter((product) => {
       if (productFilter === 'activos' && product.is_active === false) return false;
       if (productFilter === 'ocultos' && product.is_active !== false) return false;
-      if (productFilter === 'sin-stock' && Number(product.stock) > 0) return false;
-      if (productFilter === 'stock-bajo' && !(Number(product.stock) > 0 && Number(product.stock) <= 2)) return false;
+      if (productFilter === 'sin-stock' && getTotalStock(product) > 0) return false;
+      if (productFilter === 'stock-bajo') {
+        const stock = getTotalStock(product);
+        if (!(stock > 0 && stock <= 2)) return false;
+      }
+      if (productFilter === 'sin-costo' && !productsWithoutCost.some((entry) => entry.id === product.id)) return false;
       if (productFilter === 'destacados' && !product.featured) return false;
       if (productFilter === 'antiguos' && !isStaleStock(product)) return false;
       if (!query) return true;
       return normalizeText([product.name, product.category, product.color].join(' ')).includes(query);
     });
-  }, [catalog.products, productFilter, productQuery]);
+  }, [catalog.products, productFilter, productQuery, productsWithoutCost]);
 
   const changeOrderStatus = async (order, status) => {
     if (status === order.status) return;
@@ -250,6 +266,25 @@ export function AdminPanel({ session, isDemo, onLogout }) {
     setPurchaseOpen(true);
   };
 
+  const openBulkCost = (product = null) => {
+    setBulkProductId(product ? String(product.id) : '');
+    setBulkOpen(true);
+  };
+
+  const saveBulkCost = async ({ rows, supplier, purchasedAt }) => {
+    for (const row of rows) {
+      await purchasesLog.regularizeCost({
+        productId: row.productId,
+        size: row.size,
+        unitCost: row.unitCost,
+        supplier,
+        purchasedAt,
+      });
+    }
+    await catalog.refresh({ silent: true });
+    showFeedback('success', `Costo cargado en ${rows.length} ${rows.length === 1 ? 'talle' : 'talles'} del stock existente.`);
+  };
+
   const savePurchase = async (payload) => {
     const product = await purchasesLog.registerPurchase(payload);
     await catalog.refresh({ silent: true });
@@ -264,17 +299,36 @@ export function AdminPanel({ session, isDemo, onLogout }) {
   const saveProduct = async (payload) => {
     if (editing) {
       await catalog.updateProduct(editing.id, payload);
-      showFeedback('success', 'Artículo actualizado.');
-    } else {
-      await catalog.createProduct(payload);
-      showFeedback('success', 'Artículo agregado al catálogo.');
+      showFeedback(
+        'success',
+        payload.is_active
+          ? 'Artículo publicado en el catálogo.'
+          : 'Artículo actualizado.',
+      );
+      setFormOpen(false);
+      setEditing(null);
+      return;
     }
+
+    const created = await catalog.createProduct(payload);
     setFormOpen(false);
     setEditing(null);
+    showFeedback('success', 'Borrador guardado. Ahora cargá la compra con costo por talle.');
+    openPurchase(created);
   };
 
   const toggleField = async (product, field) => {
     const nextValue = field === 'is_active' ? product.is_active === false : !product[field];
+    if (field === 'is_active' && nextValue) {
+      if (!(Number(product.price) > 0)) {
+        showFeedback('error', 'Cargá el precio de venta antes de publicar.');
+        return;
+      }
+      if (!hasCostedPurchase(purchasesLog.purchases, product.id)) {
+        showFeedback('error', 'Cargá una compra con costo antes de publicar.');
+        return;
+      }
+    }
     setBusyKey(`flag:${product.id}`);
     try {
       await catalog.updateProduct(product.id, { [field]: nextValue });
@@ -283,35 +337,6 @@ export function AdminPanel({ session, isDemo, onLogout }) {
         : (nextValue ? 'Artículo marcado como destacado.' : 'Artículo quitado de destacados.'));
     } catch (error) {
       showFeedback('error', error.message || 'No pudimos actualizar el artículo.');
-    } finally {
-      setBusyKey('');
-    }
-  };
-
-  const saveStock = async (product, rawValue, input) => {
-    const parsed = Number(rawValue);
-    const stock = Math.max(0, Math.min(9999, Math.trunc(Number.isFinite(parsed) ? parsed : 0)));
-    if (stock === Number(product.stock)) return;
-    setBusyKey(`stock:${product.id}`);
-    try {
-      await catalog.updateProduct(product.id, { stock });
-      showFeedback('success', `Stock de ${product.name}: ${stock}.`);
-    } catch (error) {
-      if (input) input.value = String(product.stock);
-      showFeedback('error', error.message || 'No pudimos actualizar el stock.');
-    } finally {
-      setBusyKey('');
-    }
-  };
-
-  const adjustStock = async (product, delta) => {
-    const stock = Math.max(0, Math.min(9999, Number(product.stock) + delta));
-    if (stock === Number(product.stock)) return;
-    setBusyKey(`stock:${product.id}`);
-    try {
-      await catalog.updateProduct(product.id, { stock });
-    } catch (error) {
-      showFeedback('error', error.message || 'No pudimos actualizar el stock.');
     } finally {
       setBusyKey('');
     }
@@ -429,7 +454,31 @@ export function AdminPanel({ session, isDemo, onLogout }) {
               <span>Con más de 6 meses</span>
             </div>
           </article>
+          <article className={`stat-card ${stats.noCost > 0 ? 'stat-card--alert' : ''}`}>
+            <span className="stat-icon"><AlertTriangle size={18} aria-hidden="true" /></span>
+            <div>
+              <strong>{stats.noCost}</strong>
+              <span>Sin costo cargado</span>
+            </div>
+          </article>
         </div>
+
+        {productsWithoutCost.length > 0 && (
+          <div className="inventory-alert">
+            <AlertTriangle size={17} aria-hidden="true" />
+            <p>
+              <strong>{productsWithoutCost.length === 1 ? 'Hay 1 artículo' : `Hay ${productsWithoutCost.length} artículos`}</strong>
+              {' '}sin costo cargado. Regularizá esos ingresos para calcular la rentabilidad y poder publicar.
+            </p>
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => openBulkCost()}
+            >
+              Regularizar todos
+            </button>
+          </div>
+        )}
 
         {staleProducts.length > 0 && (
           <div className="inventory-alert">
@@ -647,6 +696,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                   <option value="sin-stock">Sin stock</option>
                   <option value="stock-bajo">Stock bajo</option>
                   <option value="antiguos">+6 meses en stock</option>
+                  <option value="sin-costo">Sin costo</option>
                   <option value="destacados">Destacados</option>
                 </select>
                 <button type="button" className="btn btn--primary btn--sm" onClick={openCreate}>
@@ -678,9 +728,10 @@ export function AdminPanel({ session, isDemo, onLogout }) {
             ) : (
               <div className="product-list">
                 {filteredProducts.map((product) => {
-                  const isOut = Number(product.stock) < 1;
+                  const isOut = getTotalStock(product) < 1;
                   const isInactive = product.is_active === false;
                   const isStale = isStaleStock(product);
+                  const isNoCost = !hasCostedPurchase(purchasesLog.purchases, product.id);
                   const rowBusy = busyKey.includes(product.id);
                   return (
                     <article
@@ -709,8 +760,9 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                           {product.featured && <span className="mini-badge">Destacado</span>}
                           {isInactive && <span className="mini-badge mini-badge--muted">Oculto</span>}
                           {isOut && <span className="mini-badge mini-badge--alert">Sin stock</span>}
-                          {!isOut && Number(product.stock) <= 2 && <span className="mini-badge mini-badge--warn">Stock bajo</span>}
+                          {!isOut && getTotalStock(product) <= 2 && <span className="mini-badge mini-badge--warn">Stock bajo</span>}
                           {isStale && <span className="mini-badge mini-badge--alert">+6 meses</span>}
+                          {isNoCost && <span className="mini-badge mini-badge--alert">Sin costo</span>}
                         </div>
                       </div>
 
@@ -719,36 +771,12 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                         <strong>{formatPrice(product.price)}</strong>
                       </div>
 
-                      <div className="stock-edit">
-                        <button
-                          type="button"
-                          onClick={() => adjustStock(product, -1)}
-                          disabled={isOut || rowBusy}
-                          aria-label={`Restar stock de ${product.name}`}
-                        >
-                          <Minus size={14} aria-hidden="true" />
-                        </button>
-                        <input
-                          key={`${product.id}-${product.stock}`}
-                          type="number"
-                          min="0"
-                          max="9999"
-                          defaultValue={product.stock}
-                          aria-label={`Stock de ${product.name}`}
-                          disabled={rowBusy}
-                          onBlur={(event) => saveStock(product, event.target.value, event.target)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') event.currentTarget.blur();
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => adjustStock(product, 1)}
-                          disabled={rowBusy}
-                          aria-label={`Sumar stock de ${product.name}`}
-                        >
-                          <Plus size={14} aria-hidden="true" />
-                        </button>
+                      <div className="size-stock-list">
+                        {(Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Único']).map((size) => (
+                          <span key={size}>
+                            <strong>{size}</strong> {getSizeStock(product, size)}
+                          </span>
+                        ))}
                       </div>
 
                       <div className="row-flags">
@@ -776,6 +804,16 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                       </div>
 
                       <div className="row-actions">
+                        {isNoCost && (
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--sm"
+                            onClick={() => openBulkCost(product)}
+                            title="Cargar costo del stock existente"
+                          >
+                            Regularizar
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="icon-btn"
@@ -859,6 +897,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                         <strong>{purchase.product_name}</strong>
                         <span>
                           {formatShortDate(purchase.purchased_at)}
+                          {purchase.size && purchase.size !== 'Único' ? ` · Talle ${purchase.size}` : ''}
                           {purchase.supplier ? ` · ${purchase.supplier}` : ''}
                         </span>
                       </div>
@@ -884,6 +923,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
       <ProductForm
         open={formOpen}
         product={editing}
+        purchases={purchasesLog.purchases}
         onClose={() => { setFormOpen(false); setEditing(null); }}
         onSave={saveProduct}
         isDemo={isDemo}
@@ -896,6 +936,16 @@ export function AdminPanel({ session, isDemo, onLogout }) {
         onClose={() => { setPurchaseOpen(false); setPurchaseProductId(''); }}
         onSave={savePurchase}
         isDemo={isDemo}
+      />
+
+      <BulkCostForm
+        open={bulkOpen}
+        products={bulkProductId
+          ? catalog.products.filter((product) => String(product.id) === bulkProductId)
+          : productsWithoutCost}
+        purchases={purchasesLog.purchases}
+        onClose={() => { setBulkOpen(false); setBulkProductId(''); }}
+        onSave={saveBulkCost}
       />
 
       <Modal

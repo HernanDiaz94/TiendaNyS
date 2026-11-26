@@ -6,10 +6,33 @@
  * queda stock viejo: así la alerta de +6 meses no desaparece por una compra.
  */
 
+import { getSizeStock } from './products.js';
+
 const MS_DAY = 24 * 60 * 60 * 1000;
 
 // 6 meses ≈ 183 días. Se usa como umbral de "inventario antiguo".
 export const STALE_STOCK_DAYS = 183;
+
+/** Una compra sirve para publicar si es real (no apertura) y tiene costo. */
+export function isCostedPurchase(purchase) {
+  if (!purchase || purchase.is_opening) return false;
+  const cost = purchase.unit_cost;
+  return cost !== null && cost !== undefined && cost !== '' && Number.isFinite(Number(cost));
+}
+
+export function hasCostedPurchase(purchases, productId) {
+  return (Array.isArray(purchases) ? purchases : []).some(
+    (purchase) => String(purchase?.product_id) === String(productId) && isCostedPurchase(purchase),
+  );
+}
+
+export function sizeHasCost(purchases, productId, size) {
+  return (Array.isArray(purchases) ? purchases : []).some((purchase) => (
+    String(purchase?.product_id) === String(productId)
+    && String(purchase?.size ?? 'Único') === String(size ?? 'Único')
+    && isCostedPurchase(purchase)
+  ));
+}
 
 /** Parsea fechas ISO y también `yyyy-mm-dd` como hora local (mediodía). */
 export function parseDate(value) {
@@ -69,9 +92,10 @@ export function todayInputValue(now = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-export function emptyPurchaseDraft(productId = '') {
+export function emptyPurchaseDraft(productId = '', sizes = ['Único']) {
   return {
     productId: String(productId || ''),
+    size: String(sizes[0] || 'Único'),
     quantity: 1,
     unitCost: '',
     supplier: '',
@@ -91,15 +115,18 @@ export function validatePurchase(values) {
   if (!values?.productId) {
     errors.productId = 'Elegí el artículo que ingresó.';
   }
+  if (!String(values?.size ?? '').trim()) {
+    errors.size = 'Elegí el talle que ingresó.';
+  }
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 9999) {
     errors.quantity = 'Ingresá una cantidad entera entre 1 y 9999.';
   }
-  if (hasCost) {
-    if (!Number.isFinite(unitCost) || unitCost < 0 || unitCost > 99999999) {
-      errors.unitCost = 'El costo unitario no es válido.';
-    } else if (Math.round(unitCost * 100) !== unitCost * 100) {
-      errors.unitCost = 'Usá como máximo dos decimales.';
-    }
+  if (!hasCost) {
+    errors.unitCost = 'Ingresá el costo unitario para poder publicar el artículo.';
+  } else if (!Number.isFinite(unitCost) || unitCost < 0 || unitCost > 99999999) {
+    errors.unitCost = 'El costo unitario no es válido.';
+  } else if (Math.round(unitCost * 100) !== unitCost * 100) {
+    errors.unitCost = 'Usá como máximo dos decimales.';
   }
   if (supplier.length > 80) {
     errors.supplier = 'El proveedor no puede superar los 80 caracteres.';
@@ -121,6 +148,7 @@ export function normalizePurchase(values) {
   const date = parseDate(values?.purchasedAt) || new Date();
   return {
     productId: String(values?.productId ?? ''),
+    size: String(values?.size ?? 'Único').trim().slice(0, 20) || 'Único',
     quantity: Math.trunc(Number(values?.quantity)),
     unitCost: hasCost ? Math.round(Number(rawCost) * 100) / 100 : null,
     supplier: String(values?.supplier ?? '').trim().slice(0, 80),
@@ -132,11 +160,11 @@ export function normalizePurchase(values) {
  * Devuelve la fecha de ingreso que debe quedar en el producto.
  * Si aún hay stock viejo, conserva la fecha más antigua.
  */
-export function nextPurchasedAt(product, incomingDate) {
+export function nextPurchasedAt(product, incomingDate, size = 'Único') {
   const incoming = parseDate(incomingDate);
   if (!incoming) return new Date().toISOString();
   const current = parseDate(product?.purchased_at);
-  const hasStock = Number(product?.stock) > 0;
+  const hasStock = getSizeStock(product, size) > 0;
   if (hasStock && current && current.getTime() < incoming.getTime()) {
     return current.toISOString();
   }

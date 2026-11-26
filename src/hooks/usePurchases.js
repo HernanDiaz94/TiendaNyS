@@ -3,6 +3,7 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase.js';
 import {
   createDemoPurchase,
   listDemoPurchases,
+  regularizeDemoCost,
 } from '../lib/demoStore.js';
 
 function friendlyError(error) {
@@ -11,7 +12,11 @@ function friendlyError(error) {
     return 'Tu usuario no tiene permisos de administración sobre las compras.';
   }
   if (message.includes('PRODUCT_NOT_FOUND')) return 'El artículo ya no existe en el catálogo.';
+  if (message.includes('INVALID_SIZE')) return 'Ese talle no pertenece al artículo.';
   if (message.includes('INVALID_QUANTITY')) return 'La cantidad comprada no es válida.';
+  if (message.includes('INVALID_COST')) return 'Ingresá un costo unitario válido.';
+  if (message.includes('NO_OPENING_STOCK')) return 'Ese talle no tiene stock de apertura para regularizar.';
+  if (message.includes('PUBLISH_REQUIRES_COST')) return 'Cargá una compra con costo para poder publicar el artículo.';
   if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
     return 'No pudimos conectar con la base de datos. Revisá tu conexión.';
   }
@@ -66,6 +71,7 @@ export function usePurchases() {
 
     const { data, error: requestError } = await supabase.rpc('register_purchase', {
       p_product_id: payload.productId,
+      p_size: payload.size || 'Único',
       p_quantity: payload.quantity,
       p_unit_cost: payload.unitCost,
       p_supplier: payload.supplier,
@@ -76,11 +82,31 @@ export function usePurchases() {
     return data;
   }, [load]);
 
+  const regularizeCost = useCallback(async (payload) => {
+    if (!isSupabaseConfigured) {
+      const result = regularizeDemoCost(payload);
+      setPurchases(listDemoPurchases());
+      return result;
+    }
+
+    const { error: requestError } = await supabase.rpc('regularize_size_cost', {
+      p_product_id: payload.productId,
+      p_size: payload.size || 'Único',
+      p_unit_cost: payload.unitCost,
+      p_supplier: payload.supplier,
+      p_purchased_at: payload.purchasedAt,
+    });
+    if (requestError) throw new Error(friendlyError(requestError));
+    await load({ silent: true });
+    return null;
+  }, [load]);
+
   return {
     purchases,
     loading,
     error,
     refresh: load,
     registerPurchase,
+    regularizeCost,
   };
 }

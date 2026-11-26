@@ -470,6 +470,19 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [x] Tema claro/oscuro en toda la app (26/11/2026): botón en tienda, login y panel, persistido en `localStorage`, sin parpadeo gracias al script inline en `index.html` (también en las páginas SEO generadas)
 - [x] Header mejorado en modo oscuro (26/11/2026): fondo oscuro con blur (antes quedaba claro), botones con superficie y hover en acento, y bolsa en lima con contador invertido
 
+### 🧵 Costo por talle y publicación controlada (26/11/2026)
+
+**Flujo.acordado con el usuario:** primero se crea el artículo como **borrador** (sin precio de venta), luego se registra la **compra con costo unitario por talle**, y recién después se carga el **precio de venta** y se **publica**. Sin compra con costo no se puede publicar.
+
+- **Stock independiente por talle:** tabla `public.product_sizes` con `(product_id, size, stock, purchased_at)`. `products.stock` queda como total derivado para compatibilidad. Helper JS `getSizeStock(product, size)` usa el mapa cuando existe y hace fallback al stock histórico.
+- **Compras por talle:** `purchases.size` obligatorio junto con `quantity` y `unit_cost`. `register_purchase(p_product_id, p_size, p_quantity, p_unit_cost, p_supplier, p_purchased_at)` crea/actualiza el renglón de talle y el lote con costo en una transacción.
+- **FIFO por talle:** `place_order` particiona los lotes por `(product_id, size)`; `admin_update_order_status` devuelve el stock y los lotes al talle correcto al cancelar.
+- **Gate de publicación:** trigger `products_publication_gate` exige precio > 0, stock en al menos un talle y una compra real con costo en cada talle con stock. La UI deshabilita «Publicar» y el toggle «Visible» hasta cumplirlo.
+- **Regularización:** botones «Regularizar» (por artículo) y «Regularizar todos» abren un formulario masivo que asigna costo/proveedor/fecha al stock ya existente. La RPC `regularize_size_cost(...)` convierte el lote de apertura en lote con costo **sin sumar unidades**.
+- **Migración pendiente de ejecución:** `supabase/add-size-cost-gate.sql`, ASCII-only e idempotente, con **Run without RLS** en el SQL Editor. Debe ejecutarse antes de probar el flujo en Supabase; mientras tanto el código tolera la ausencia de las columnas/tablas nuevas.
+- Copias sincronizadas del bloque final en `supabase/schema.sql`, `supabase/add-cost-tracking.sql` y `supabase/add-cost-tracking-step2.sql`.
+- Verificación local: **91/91 tests** y build + postbuild OK (16 páginas de producto, sitemap de 17 URLs). Falta verificación en Supabase/producción tras la migración.
+
 ---
 
 ## 📞 Contacto
@@ -488,10 +501,10 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 npm run dev          # Inicia servidor en http://localhost:5173
 
 # Testing
-npm test             # Ejecuta 75 tests
+npm test             # Ejecuta 91 tests
 
 # Build
-npm run build        # Genera dist/ + 12 páginas SEO de producto (postbuild; 15 tras la migración de audience)
+npm run build        # Genera dist/ + 16 páginas SEO de producto (postbuild)
 
 # Git
 git add .
@@ -521,5 +534,6 @@ git push origin --tags            # Subir tags a GitHub
 - **Tests:** 75/75 ✔ · **Build:** OK ✔ · **Deploy:** READY ✔ (`tienda-2b8kwbcg0-hernan-d-team.vercel.app`) · SEO regenerado con 15 páginas y sitemap de 16 URLs.
 - Cambios de rentabilidad migrados, verificados en API, desplegados, commiteados y pusheados. (`.env` no versionado.)
 - Todo se documenta en este archivo (`planDesarrollo.md`); **no se crean otros `.md`**. MercadoPago sigue sin tocarse.
+- **Costo por talle:** implementado y con tests locales (91/91) + build OK; **pendiente de migración en Supabase** (`supabase/add-size-cost-gate.sql`, Run without RLS) y de deploy. Hasta que el usuario avise «listo», no se da por verificado en producción.
 
 *Documento actualizado manualmente. Última actualización: 26 de Noviembre, 2026*

@@ -1,5 +1,6 @@
 import { demoProducts } from '../data/demoProducts.js';
 import { nextPurchasedAt } from './inventory.js';
+import { getSizeStock, normalizeStockBySize, totalFromStockBySize } from './products.js';
 import {
   allocateLots,
   restoreAllocatedLots,
@@ -101,12 +102,27 @@ function withInventoryDefaults(product) {
     || (replacedId && currentImage.includes(`/photos/${replacedId}/`)),
   );
   const imageUrl = mustMigrate ? seedImage : product.image_url;
+  const sizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Único'];
+  const hasMap = Boolean(
+    product.stock_by_size
+    && typeof product.stock_by_size === 'object'
+    && !Array.isArray(product.stock_by_size)
+    && Object.keys(product.stock_by_size).length > 0,
+  );
+  const stockBySize = hasMap
+    ? normalizeStockBySize(product.stock_by_size, sizes)
+    : Object.fromEntries(sizes.map((size, index) => [
+      size,
+      index === 0 ? Math.max(0, Math.trunc(Number(product.stock) || 0)) : 0,
+    ]));
 
   return {
     ...product,
     image_url: imageUrl,
     audience: storedAudience(product),
     purchased_at: product.purchased_at || product.created_at || new Date().toISOString(),
+    stock_by_size: stockBySize,
+    stock: totalFromStockBySize(stockBySize),
   };
 }
 
@@ -122,6 +138,8 @@ export function readDemoProducts() {
           || normalized.some((product, index) => (
             product.image_url !== merged[index].image_url
             || product.audience !== merged[index].audience
+            || JSON.stringify(product.stock_by_size) !== JSON.stringify(merged[index].stock_by_size)
+            || product.stock !== merged[index].stock
           ));
         if (changed) writeDemoProducts(normalized);
         return normalized;
@@ -147,6 +165,8 @@ export function listDemoProducts() {
 
 export function createDemoProduct(payload) {
   const products = readDemoProducts();
+  const sizes = Array.isArray(payload.sizes) && payload.sizes.length ? payload.sizes : ['Único'];
+  const stockBySize = normalizeStockBySize(payload.stock_by_size, sizes);
   const product = {
     ...payload,
     id: makeId(),
@@ -155,6 +175,8 @@ export function createDemoProduct(payload) {
     audience: storedAudience(payload),
     is_active: payload.is_active !== false,
     featured: Boolean(payload.featured),
+    stock_by_size: stockBySize,
+    stock: totalFromStockBySize(stockBySize),
   };
   writeDemoProducts([product, ...products]);
   return product;
@@ -165,6 +187,11 @@ export function updateDemoProduct(id, patch) {
   const index = products.findIndex((product) => String(product.id) === String(id));
   if (index === -1) throw fail('NOT_FOUND', 'El artículo no existe.');
   const next = { ...products[index], ...patch, id: products[index].id };
+  if (patch.stock_by_size) {
+    const sizes = Array.isArray(next.sizes) && next.sizes.length ? next.sizes : ['Único'];
+    next.stock_by_size = normalizeStockBySize(patch.stock_by_size, sizes);
+    next.stock = totalFromStockBySize(next.stock_by_size);
+  }
   products[index] = next;
   writeDemoProducts(products);
   return next;
@@ -226,13 +253,16 @@ export function createDemoOrder({ customer, items }) {
     if (!productSizes.includes(size)) {
       throw fail('INVALID_SIZE', 'El talle elegido ya no está disponible.');
     }
-    if (Number(product.stock) < quantity) {
-      throw fail('STOCK_CHANGED', 'Se actualizó el stock de un artículo.');
+    if (getSizeStock(product, size) < quantity) {
+      throw fail('STOCK_CHANGED', 'Se actualizó el stock de ese talle.');
     }
 
     const unitPrice = Number(product.price);
     const { allocations, remainingById } = allocateLots(
-      purchasePool.filter((lot) => String(lot.product_id) === String(product.id)),
+      purchasePool.filter((lot) => (
+        String(lot.product_id) === String(product.id)
+        && String(lot.size || 'Único') === size
+      )),
       quantity,
     );
     for (const [lotId, remaining] of remainingById) {
@@ -244,7 +274,9 @@ export function createDemoOrder({ customer, items }) {
     }
 
     total += unitPrice * quantity;
-    decrements.set(product.id, (decrements.get(product.id) || 0) + quantity);
+    const decrementKey = `${String(product.id)}::${size.toLowerCase()}`;
+    const previous = decrements.get(decrementKey) || { productId: product.id, size, quantity: 0 };
+    decrements.set(decrementKey, { ...previous, quantity: previous.quantity + quantity });
     normalized.push({
       id: makeId(),
       product_id: product.id,
@@ -257,9 +289,19 @@ export function createDemoOrder({ customer, items }) {
   }
 
   const updated = products.map((product) => {
-    const reserved = decrements.get(product.id) || 0;
-    if (!reserved) return product;
-    return { ...product, stock: Math.max(0, Number(product.stock) - reserved) };
+    const rows = [...decrements.values()].filter((row) => String(row.productId) === String(product.id));
+    if (rows.length < 1) return product;
+    const stockBySize = { ...(product.stock_by_size || {}) };
+    for (const row of rows) {
+      const key = Object.keys(stockBySize).find((entry) => entry.toLowerCase() === row.size.toLowerCase());
+      const target = key ?? row.size;
+      stockBySize[target] = Math.max(0, getSizeStock(product, row.size) - row.quantity);
+    }
+    return {
+      ...product,
+      stock_by_size: stockBySize,
+      stock: totalFromStockBySize(stockBySize),
+    };
   });
   writeDemoProducts(updated);
   writeDemoPurchases(purchasePool);
@@ -293,14 +335,30 @@ export function updateDemoOrderStatus(id, status) {
     const allocations = [];
     for (const item of orders[index].order_items || []) {
       if (item.product_id) {
-        restored.set(item.product_id, (restored.get(item.product_id) || 0) + item.quantity);
+        const size = String(item.size || 'Único');
+        const key = `${String(item.product_id)}::${size.toLowerCase()}`;
+        restored.set(key, {
+          productId: item.product_id,
+          size,
+          quantity: (restored.get(key)?.quantity || 0) + item.quantity,
+        });
       }
       if (Array.isArray(item.lot_allocations)) allocations.push(...item.lot_allocations);
     }
     writeDemoProducts(products.map((product) => {
-      const quantity = restored.get(product.id) || 0;
-      if (!quantity) return product;
-      return { ...product, stock: Math.min(9999, Number(product.stock) + quantity) };
+      const rows = [...restored.values()].filter((row) => String(row.productId) === String(product.id));
+      if (rows.length < 1) return product;
+      const stockBySize = { ...(product.stock_by_size || {}) };
+      for (const row of rows) {
+        const key = Object.keys(stockBySize).find((entry) => entry.toLowerCase() === row.size.toLowerCase());
+        const target = key ?? row.size;
+        stockBySize[target] = Math.min(9999, getSizeStock(product, row.size) + row.quantity);
+      }
+      return {
+        ...product,
+        stock_by_size: stockBySize,
+        stock: totalFromStockBySize(stockBySize),
+      };
     }));
     writeDemoPurchases(restoreAllocatedLots(readDemoPurchases(), allocations));
   }
@@ -341,7 +399,7 @@ export function listDemoPurchases() {
   );
 }
 
-export function createDemoPurchase({ productId, quantity, unitCost, supplier, purchasedAt }) {
+export function createDemoPurchase({ productId, size = 'Único', quantity, unitCost, supplier, purchasedAt }) {
   const products = readDemoProducts();
   const index = products.findIndex((product) => String(product.id) === String(productId));
   if (index === -1) throw fail('PRODUCT_NOT_FOUND', 'El artículo ya no existe.');
@@ -352,16 +410,27 @@ export function createDemoPurchase({ productId, quantity, unitCost, supplier, pu
   }
 
   const product = products[index];
+  const sizeName = String(size || 'Único').trim().slice(0, 20) || 'Único';
+  const sizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Único'];
+  if (!sizes.some((entry) => entry.toLowerCase() === sizeName.toLowerCase())) {
+    throw fail('INVALID_SIZE', 'Ese talle no pertenece al artículo.');
+  }
   const cost = unitCost === null || unitCost === undefined || unitCost === ''
     ? null
     : Math.round(Number(unitCost) * 100) / 100;
   const supplierName = String(supplier || '').trim().slice(0, 80);
   const entryDate = purchasedAt || new Date().toISOString();
 
+  const stockBySize = { ...(product.stock_by_size || {}) };
+  const key = Object.keys(stockBySize).find((entry) => entry.toLowerCase() === sizeName.toLowerCase());
+  const target = key ?? sizeName;
+  stockBySize[target] = Math.min(9999, getSizeStock(product, sizeName) + amount);
+
   const updated = {
     ...product,
-    stock: Math.min(9999, Number(product.stock) + amount),
-    purchased_at: nextPurchasedAt(product, entryDate),
+    stock_by_size: stockBySize,
+    stock: totalFromStockBySize(stockBySize),
+    purchased_at: nextPurchasedAt(product, entryDate, sizeName),
   };
   products[index] = updated;
   writeDemoProducts(products);
@@ -370,6 +439,7 @@ export function createDemoPurchase({ productId, quantity, unitCost, supplier, pu
     id: makeId(),
     product_id: product.id,
     product_name: product.name,
+    size: sizeName,
     quantity: amount,
     remaining_quantity: amount,
     unit_cost: cost,
@@ -380,6 +450,60 @@ export function createDemoPurchase({ productId, quantity, unitCost, supplier, pu
   };
   writeDemoPurchases([purchase, ...readDemoPurchases()]);
   return { product: updated, purchase };
+}
+
+export function regularizeDemoCost({ productId, size = 'Único', unitCost, supplier, purchasedAt }) {
+  const purchases = readDemoPurchases();
+  const sizeName = String(size || 'Único').trim().slice(0, 20) || 'Único';
+  const cost = Math.round(Number(unitCost) * 100) / 100;
+  if (!Number.isFinite(cost) || cost < 0) throw fail('INVALID_COST', 'El costo unitario no es válido.');
+  const date = purchasedAt || new Date().toISOString();
+
+  let updated = 0;
+  const nextPurchases = purchases.map((purchase) => {
+    if (
+      String(purchase.product_id) !== String(productId)
+      || String(purchase.size ?? 'Único') !== sizeName
+      || purchase.is_opening !== true
+      || Number(purchase.remaining_quantity) < 1
+    ) return purchase;
+    updated += 1;
+    return {
+      ...purchase,
+      unit_cost: cost,
+      is_opening: false,
+      supplier: String(supplier || '').trim().slice(0, 80) || purchase.supplier,
+      purchased_at: date,
+    };
+  });
+  if (updated === 0) throw fail('NO_OPENING_STOCK', 'No hay stock de apertura para ese talle.');
+  writeDemoPurchases(nextPurchases);
+
+  const products = readDemoProducts();
+  const index = products.findIndex((product) => String(product.id) === String(productId));
+  if (index !== -1) {
+    const product = products[index];
+    const stockBySize = { ...(product.stock_by_size || {}) };
+    const key = Object.keys(stockBySize).find((entry) => entry.toLowerCase() === sizeName.toLowerCase()) ?? sizeName;
+    if (Number(stockBySize[key]) > 0) stockBySize[key] = Number(stockBySize[key]);
+    const purchaseDate = parseDemoDate(date);
+    const currentDate = parseDemoDate(product.purchased_at);
+    products[index] = {
+      ...product,
+      stock_by_size: stockBySize,
+      purchased_at: currentDate && purchaseDate && currentDate.getTime() < purchaseDate.getTime()
+        ? currentDate.toISOString()
+        : purchaseDate?.toISOString() || date,
+    };
+    writeDemoProducts(products);
+    return products[index];
+  }
+  return null;
+}
+
+function parseDemoDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export function resetDemoData() {

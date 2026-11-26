@@ -7,6 +7,19 @@ import {
   updateDemoProduct,
 } from '../lib/demoStore.js';
 
+function attachStockBySize(products, rows) {
+  const byId = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const key = String(row.product_id);
+    if (!byId.has(key)) byId.set(key, {});
+    byId.get(key)[String(row.size)] = Number(row.stock) || 0;
+  }
+  return (products || []).map((product) => ({
+    ...product,
+    stock_by_size: byId.get(String(product.id)) || {},
+  }));
+}
+
 function friendlyError(error, fallback) {
   const message = String(error?.message || '');
   if (message.includes('row-level security') || message.includes('permission denied')) {
@@ -29,8 +42,9 @@ export function useCatalog({ includeInactive = false } = {}) {
   const mounted = useRef(true);
   const supportsSizeGuides = useRef(true);
   const supportsAudience = useRef(true);
+  const supportsProductSizes = useRef(true);
 
-  // Hasta ejecutar las migraciones, PostgREST rechaza las columnas nuevas.
+  // Hasta ejecutar las migraciones, PostgREST rechaza las columnas/tablas nuevas.
   // En ese caso las omitimos para no romper el CRUD existente; la tienda igual
   // muestra la guía genérica según la categoría y trata sin etiqueta como unisex.
   function withoutNewColumns(record) {
@@ -41,6 +55,10 @@ export function useCatalog({ includeInactive = false } = {}) {
     }
     if (!supportsAudience.current) {
       const { audience: _audience, ...rest } = result;
+      result = rest;
+    }
+    if (!supportsProductSizes.current) {
+      const { stock_by_size: _sizes, ...rest } = result;
       result = rest;
     }
     return result;
@@ -84,7 +102,13 @@ export function useCatalog({ includeInactive = false } = {}) {
         supportsSizeGuides.current = !guidesError;
         supportsAudience.current = !audienceError;
       }
-      setProducts(rows);
+
+      const { data: sizeRows, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('product_id, size, stock')
+        .limit(1000);
+      supportsProductSizes.current = !sizesError;
+      setProducts(supportsProductSizes.current ? attachStockBySize(rows, sizeRows) : rows);
       setError('');
     }
     setLoading(false);
@@ -98,13 +122,49 @@ export function useCatalog({ includeInactive = false } = {}) {
     };
   }, [load]);
 
+  const syncProductSizes = useCallback(async (productId, stockBySize) => {
+    if (!supportsProductSizes.current) return;
+    const entries = Object.entries(stockBySize || {}).map(([size, stock]) => ({
+      product_id: productId,
+      size: String(size),
+      stock: Math.max(0, Math.min(9999, Math.trunc(Number(stock) || 0))),
+    }));
+
+    if (entries.length > 0) {
+      const { error } = await supabase
+        .from('product_sizes')
+        .upsert(entries, { onConflict: 'product_id,size' });
+      if (error) throw new Error(friendlyError(error, 'No pudimos guardar el stock por talle.'));
+    }
+
+    const { data: existing, error: listError } = await supabase
+      .from('product_sizes')
+      .select('size')
+      .eq('product_id', productId);
+    if (listError) throw new Error(friendlyError(listError, 'No pudimos leer el stock por talle.'));
+
+    const keep = new Set(entries.map((entry) => entry.size.toLowerCase()));
+    const remove = (existing || [])
+      .map((row) => String(row.size))
+      .filter((size) => !keep.has(size.toLowerCase()));
+    if (remove.length > 0) {
+      const { error } = await supabase
+        .from('product_sizes')
+        .delete()
+        .eq('product_id', productId)
+        .in('size', remove);
+      if (error) throw new Error(friendlyError(error, 'No pudimos limpiar los talles quitados.'));
+    }
+  }, []);
+
   const createProduct = useCallback(async (payload) => {
+    const { stock_by_size: stockBySize, ...productFields } = payload;
     const record = {
-      ...payload,
+      ...productFields,
       purchased_at: payload.purchased_at || new Date().toISOString(),
     };
     if (!isSupabaseConfigured) {
-      const created = createDemoProduct(record);
+      const created = createDemoProduct(payload);
       setProducts(listDemoProducts());
       return created;
     }
@@ -116,9 +176,14 @@ export function useCatalog({ includeInactive = false } = {}) {
       .single();
 
     if (requestError) throw new Error(friendlyError(requestError, 'No pudimos crear el artículo.'));
-    setProducts((current) => [data, ...current]);
-    return data;
-  }, []);
+    await syncProductSizes(data.id, stockBySize);
+    const created = {
+      ...data,
+      stock_by_size: supportsProductSizes.current ? (stockBySize || {}) : undefined,
+    };
+    setProducts((current) => [created, ...current]);
+    return created;
+  }, [syncProductSizes]);
 
   const updateProduct = useCallback(async (id, patch) => {
     if (!isSupabaseConfigured) {
@@ -127,17 +192,26 @@ export function useCatalog({ includeInactive = false } = {}) {
       return updated;
     }
 
+    const { stock_by_size: stockBySize, ...productPatch } = patch;
+    if (stockBySize && supportsProductSizes.current) delete productPatch.stock;
     const { data, error: requestError } = await supabase
       .from('products')
-      .update(withoutNewColumns(patch))
+      .update(withoutNewColumns(productPatch))
       .eq('id', id)
       .select()
       .single();
 
     if (requestError) throw new Error(friendlyError(requestError, 'No pudimos actualizar el artículo.'));
-    setProducts((current) => current.map((product) => (product.id === id ? data : product)));
-    return data;
-  }, []);
+    if (supportsProductSizes.current && stockBySize) await syncProductSizes(id, stockBySize);
+    const updated = {
+      ...data,
+      stock_by_size: supportsProductSizes.current
+        ? (stockBySize ?? products.find((product) => product.id === id)?.stock_by_size ?? {})
+        : undefined,
+    };
+    setProducts((current) => current.map((product) => (product.id === id ? updated : product)));
+    return updated;
+  }, [products, syncProductSizes]);
 
   const deleteProduct = useCallback(async (id) => {
     if (!isSupabaseConfigured) {

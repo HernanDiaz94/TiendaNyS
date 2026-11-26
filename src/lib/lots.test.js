@@ -91,6 +91,22 @@ describe('FIFO de lotes', () => {
     expect(withOpeningLots(first, products)).toHaveLength(1);
   });
 
+  it('crea un lote de apertura por cada talle con stock', () => {
+    const products = [{
+      id: 'a',
+      name: 'Camisa',
+      stock: 9,
+      sizes: ['S', 'M', 'L'],
+      stock_by_size: { S: 4, M: 5, L: 0 },
+      purchased_at: '2026-10-01',
+      created_at: '2026-10-01',
+    }];
+    const lotsBySize = withOpeningLots([], products);
+    expect(lotsBySize.map((lot) => lot.size)).toEqual(['S', 'M']);
+    expect(lotsBySize.map((lot) => lot.remaining_quantity)).toEqual([4, 5]);
+    expect(withOpeningLots(lotsBySize, products)).toHaveLength(2);
+  });
+
   it('normaliza costos con dos decimales y sin costo', () => {
     expect(normalizeCost('10000')).toBe(10000);
     expect(normalizeCost('10000.999')).toBe(10001);

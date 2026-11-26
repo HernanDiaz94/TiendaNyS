@@ -1,3 +1,5 @@
+import { getSizeStock } from './products.js';
+
 const MAX_CART_ITEMS = 20;
 const MAX_QUANTITY = 10;
 
@@ -14,7 +16,7 @@ function buildCartItem(product, size, quantity) {
     id: String(product.id),
     name: String(product.name).trim().slice(0, 100),
     price: Number(product.price),
-    stock: Math.trunc(Number(product.stock)),
+    stock: getSizeStock(product, size),
     size,
     quantity,
   };
@@ -29,10 +31,10 @@ function buildCartItem(product, size, quantity) {
  */
 export function addToCart(cart, product, size = 'Único', quantity = 1) {
   if (!product) return cart;
-  const stock = Math.trunc(Number(product.stock));
+  const itemSize = cleanSize(size);
+  const stock = getSizeStock(product, itemSize);
   if (!Number.isFinite(stock) || stock < 1) return cart;
 
-  const itemSize = cleanSize(size);
   const amount = Math.max(1, Math.min(MAX_QUANTITY, Math.trunc(Number(quantity) || 1)));
   const maxForItem = Math.min(stock, MAX_QUANTITY);
   const existing = cart.find((item) => item.id === String(product.id) && item.size === itemSize);
@@ -133,12 +135,13 @@ export function reconcileCart(cart, products) {
 
   for (const item of cart) {
     const product = byId.get(String(item.id));
-    if (!product || product.is_active === false || Number(product.stock) < 1) {
+    const sizeStock = product ? getSizeStock(product, item.size) : 0;
+    if (!product || product.is_active === false || sizeStock < 1) {
       changed = true;
       continue;
     }
 
-    const stock = Math.min(9999, Math.max(0, Math.trunc(Number(product.stock))));
+    const stock = Math.min(9999, sizeStock);
     const price = Number(product.price);
     const quantity = Math.min(item.quantity, stock, MAX_QUANTITY);
     const image = safeImage(product.image_url);

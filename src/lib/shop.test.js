@@ -11,7 +11,14 @@ import {
   validateCustomer,
 } from './shop.js';
 
-const product = { id: 'tee-1', name: 'Remera', price: 12000, stock: 3 };
+const product = {
+  id: 'tee-1',
+  name: 'Remera',
+  price: 12000,
+  stock: 3,
+  sizes: ['M'],
+  stock_by_size: { M: 3 },
+};
 
 describe('cart rules', () => {
   it('adds the same product and size by increasing its quantity', () => {
@@ -27,10 +34,19 @@ describe('cart rules', () => {
   });
 
   it('respects the requested quantity and the 10 unit cap', () => {
-    const withTwo = addToCart([], { ...product, stock: 20 }, 'M', 2);
+    const highStock = { ...product, stock: 20, stock_by_size: { M: 20 } };
+    const withTwo = addToCart([], highStock, 'M', 2);
     expect(withTwo[0].quantity).toBe(2);
-    const capped = addToCart([], { ...product, stock: 20 }, 'M', 99);
+    const capped = addToCart([], highStock, 'M', 99);
     expect(capped[0].quantity).toBe(10);
+  });
+
+  it('limits each line to the stock of its own size', () => {
+    const sized = { ...product, sizes: ['S', 'M'], stock: 4, stock_by_size: { S: 1, M: 3 } };
+    expect(addToCart([], sized, 'S', 5)[0].quantity).toBe(1);
+    expect(addToCart([], sized, 'M', 5)[0].quantity).toBe(3);
+    const cart = addToCart(addToCart([], sized, 'S'), sized, 'M');
+    expect(cart.map((item) => [item.size, item.quantity])).toEqual([['S', 1], ['M', 1]]);
   });
 
   it('counts quantities and totals using integer cents', () => {
@@ -54,8 +70,10 @@ describe('cart sanitizing and reconciliation', () => {
   });
 
   it('discards malformed or impossible entries restored from local storage', () => {
-    const valid = { ...product, size: 'M', quantity: 1 };
-    const tampered = { ...product, size: 'M', quantity: 999 };
+    const valid = {
+      id: 'tee-1', name: 'Remera', price: 12000, stock: 3, size: 'M', quantity: 1,
+    };
+    const tampered = { ...valid, quantity: 999 };
     expect(sanitizeCart([valid, tampered, null, { id: 42 }])).toEqual([valid]);
   });
 
@@ -65,7 +83,15 @@ describe('cart sanitizing and reconciliation', () => {
       { id: 'gone', name: 'Viejo', price: 100, stock: 1, size: 'S', quantity: 1 },
     ];
     const next = reconcileCart(cart, [
-      { id: 'tee-1', name: 'Remera', price: 15000, stock: 1, is_active: true },
+      {
+        id: 'tee-1',
+        name: 'Remera',
+        price: 15000,
+        stock: 1,
+        sizes: ['M'],
+        stock_by_size: { M: 1 },
+        is_active: true,
+      },
     ]);
     expect(next).toHaveLength(1);
     expect(next[0]).toMatchObject({ price: 15000, stock: 1, quantity: 1 });

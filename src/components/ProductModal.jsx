@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Check, MapPin, Minus, Plus, RefreshCw, Ruler, ShoppingBag, Truck, X } from 'lucide-react';
 
 import { buildWhatsAppUrl, formatPrice } from '../lib/shop.js';
-import { normalizeAudience, sortSizes, stockState } from '../lib/products.js';
+import { getSizeStock, normalizeAudience, sortSizes, stockState } from '../lib/products.js';
 import { resolveSizeGuide } from '../lib/sizeGuides.js';
 import { Modal } from './Modal.jsx';
 import { ProductImage, WhatsAppIcon } from './ui.jsx';
@@ -25,10 +25,10 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
     setQuantity(1);
   }, [product?.id, sizes]);
 
-  const stock = Math.max(0, Number(product?.stock) || 0);
+  const selectedSize = sizes.includes(size) ? size : (sizes[0] || 'Único');
+  const stock = Math.max(0, getSizeStock(product, selectedSize));
   const state = stockState(stock);
   const maxQuantity = Math.min(Math.max(stock, 1), 10);
-  const selectedSize = sizes.includes(size) ? size : (sizes[0] || 'Único');
 
   const inquiryUrl = product
     ? buildWhatsAppUrl(
@@ -105,6 +105,7 @@ export function ProductModal({ product, onClose, onAdd, whatsappNumber, instagra
                     type="button"
                     className={option === selectedSize ? 'selected' : ''}
                     aria-pressed={option === selectedSize}
+                    disabled={getSizeStock(product, option) < 1}
                     onClick={() => setSize(option)}
                   >
                     {option}

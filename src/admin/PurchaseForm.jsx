@@ -30,10 +30,11 @@ export function PurchaseForm({ open, products = [], initialProductId = '', onClo
 
   useEffect(() => {
     if (!open) return;
-    setDraft(emptyPurchaseDraft(initialProductId));
+    const initial = products.find((product) => String(product.id) === String(initialProductId));
+    setDraft(emptyPurchaseDraft(initialProductId, initial?.sizes || ['Único']));
     setErrors({});
     setFormError('');
-  }, [open, initialProductId]);
+  }, [open, initialProductId, products]);
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => String(a.name).localeCompare(String(b.name), 'es')),
@@ -102,7 +103,16 @@ export function PurchaseForm({ open, products = [], initialProductId = '', onClo
               <select
                 id="purchase-productId"
                 value={draft.productId}
-                onChange={(event) => setField('productId', event.target.value)}
+                onChange={(event) => {
+                  const productId = event.target.value;
+                  const product = products.find((entry) => String(entry.id) === String(productId));
+                  setDraft((current) => ({
+                    ...current,
+                    productId,
+                    size: String(product?.sizes?.[0] || 'Único'),
+                  }));
+                  setErrors((current) => ({ ...current, productId: undefined, size: undefined }));
+                }}
                 aria-invalid={Boolean(errors.productId)}
                 data-autofocus
               >
@@ -115,9 +125,22 @@ export function PurchaseForm({ open, products = [], initialProductId = '', onClo
               </select>
               {selected && (
                 <p className="field-hint">
-                  Stock actual: {selected.stock}. La compra suma unidades y actualiza la fecha de ingreso.
+                  Stock actual: {selected.stock}. La compra suma unidades al talle elegido.
                 </p>
               )}
+            </Field>
+
+            <Field id="purchase-size" label="Talle" error={errors.size}>
+              <select
+                id="purchase-size"
+                value={draft.size}
+                onChange={(event) => setField('size', event.target.value)}
+                aria-invalid={Boolean(errors.size)}
+              >
+                {(selected?.sizes?.length ? selected.sizes : ['Único']).map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
             </Field>
 
             <Field id="purchase-quantity" label="Cantidad comprada" error={errors.quantity}>
@@ -148,8 +171,7 @@ export function PurchaseForm({ open, products = [], initialProductId = '', onClo
               id="purchase-unitCost"
               label="Costo unitario en ARS"
               error={errors.unitCost}
-              hint="Sirve para calcular el costo total del lote."
-              optional
+              hint="Obligatorio: sin costo no se puede publicar el artículo."
             >
               <input
                 id="purchase-unitCost"

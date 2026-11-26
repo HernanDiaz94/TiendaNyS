@@ -113,6 +113,57 @@ export function getCatalogCategories(products) {
   return [...known, ...extra].map((category) => ({ category, count: counts.get(category) }));
 }
 
+/** Stock independiente por talle: { "XL": 5, "XXL": 10 }. */
+export function normalizeStockBySize(value, sizes = []) {
+  const entries = parseSizes(sizes);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return Object.fromEntries(entries.map((size) => [size, 0]));
+  }
+  const result = {};
+  for (const size of entries) {
+    const raw = value[size]
+      ?? Object.entries(value).find(([key]) => key.toLowerCase() === size.toLowerCase())?.[1];
+    const amount = Math.trunc(Number(raw));
+    result[size] = Number.isFinite(amount) ? Math.min(9999, Math.max(0, amount)) : 0;
+  }
+  return result;
+}
+
+export function totalFromStockBySize(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return 0;
+  return Object.values(value).reduce((sum, entry) => {
+    const amount = Math.trunc(Number(entry));
+    return sum + (Number.isFinite(amount) && amount > 0 ? amount : 0);
+  }, 0);
+}
+
+/** Total del producto: suma por talle si existe, si no el stock histórico. */
+export function getTotalStock(product) {
+  const map = product?.stock_by_size;
+  if (map && typeof map === 'object' && !Array.isArray(map) && Object.keys(map).length > 0) {
+    return totalFromStockBySize(map);
+  }
+  return Math.max(0, Math.trunc(Number(product?.stock) || 0));
+}
+
+/** Stock de un talle, con fallback al stock histórico para datos migrados. */
+export function getSizeStock(product, size) {
+  const clean = String(size ?? 'Único').trim() || 'Único';
+  const map = product?.stock_by_size;
+  if (map && typeof map === 'object' && !Array.isArray(map)) {
+    const key = Object.keys(map).find((entry) => entry.toLowerCase() === clean.toLowerCase());
+    if (key !== undefined) {
+      const amount = Math.trunc(Number(map[key]));
+      return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+    }
+  }
+  const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['Único'];
+  if (sizes.length === 1 || clean === sizes[0]) {
+    return Math.max(0, Math.trunc(Number(product?.stock) || 0));
+  }
+  return 0;
+}
+
 export function stockState(stock) {
   const amount = Math.max(0, Math.trunc(Number(stock) || 0));
   if (amount < 1) return { tone: 'out', label: 'Agotado' };
@@ -163,7 +214,7 @@ export function filterProducts(products, filters = {}) {
       const sizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Único'];
       return sizes.includes(size);
     })
-    .filter((product) => !filters.onlyAvailable || Number(product.stock) > 0)
+    .filter((product) => !filters.onlyAvailable || getTotalStock(product) > 0)
     .filter((product) => {
       if (!query) return true;
       return normalizeText(
@@ -188,6 +239,7 @@ export function validateProduct(values, options = {}) {
   const price = Number(values?.price);
   const stock = Number(values?.stock);
   const sizes = parseSizes(values?.sizes);
+  const stockBySize = values?.stock_by_size;
 
   if (name.length < 2 || name.length > 100) errors.name = 'El nombre debe tener entre 2 y 100 caracteres.';
   else if (/[<>]/.test(name)) errors.name = 'El nombre no puede incluir los caracteres < o >.';
@@ -199,9 +251,16 @@ export function validateProduct(values, options = {}) {
   }
   if (color.length > 40) errors.color = 'El color no puede superar los 40 caracteres.';
 
-  if (!Number.isFinite(price) || price <= 0) errors.price = 'Ingresá un precio mayor a cero.';
-  else if (price > 99999999) errors.price = 'El precio supera el máximo permitido.';
-  else if (Math.round(price * 100) !== price * 100) errors.price = 'Usá como máximo dos decimales.';
+  const isDraft = options.allowDraftPrice === true && values?.is_active === false;
+  if (isDraft && (values?.price === '' || values?.price === null || price === 0)) {
+    // El borrador se guarda sin precio de venta; se completa al publicar.
+  } else if (!Number.isFinite(price) || price <= 0) {
+    errors.price = 'Ingresá un precio mayor a cero para publicar.';
+  } else if (price > 99999999) {
+    errors.price = 'El precio supera el máximo permitido.';
+  } else if (Math.round(price * 100) !== price * 100) {
+    errors.price = 'Usá como máximo dos decimales.';
+  }
 
   if (!Number.isInteger(stock) || stock < 0 || stock > 9999) {
     errors.stock = 'El stock debe ser un número entero entre 0 y 9999.';
@@ -210,6 +269,13 @@ export function validateProduct(values, options = {}) {
   if (sizes.length < 1) errors.sizes = 'Agregá al menos un talle.';
   else if (sizes.length > 20) errors.sizes = 'Podés cargar hasta 20 talles.';
   else if (sizes.some((size) => size.length > 20)) errors.sizes = 'Cada talle puede tener hasta 20 caracteres.';
+
+  if (stockBySize && typeof stockBySize === 'object' && !Array.isArray(stockBySize)) {
+    const invalid = Object.values(stockBySize).some((entry) => (
+      !Number.isInteger(Number(entry)) || Number(entry) < 0 || Number(entry) > 9999
+    ));
+    if (invalid) errors.stock_by_size = 'La cantidad de cada talle debe ser un entero entre 0 y 9999.';
+  }
 
   if (imageUrl) {
     const isDataImage = imageUrl.startsWith('data:image/');
@@ -230,6 +296,9 @@ export function validateProduct(values, options = {}) {
 }
 
 export function normalizeProductDraft(values) {
+  const sizes = parseSizes(values?.sizes);
+  const hasBySize = Boolean(values?.stock_by_size && typeof values.stock_by_size === 'object');
+  const stockBySize = normalizeStockBySize(values?.stock_by_size, sizes);
   return {
     name: String(values?.name ?? '').trim(),
     description: String(values?.description ?? '').trim(),
@@ -238,8 +307,9 @@ export function normalizeProductDraft(values) {
     color: String(values?.color ?? '').trim(),
     image_url: String(values?.image_url ?? '').trim(),
     price: Math.round(Number(values?.price) * 100) / 100,
-    stock: Math.trunc(Number(values?.stock)),
-    sizes: parseSizes(values?.sizes),
+    stock: hasBySize ? totalFromStockBySize(stockBySize) : Math.trunc(Number(values?.stock)),
+    stock_by_size: stockBySize,
+    sizes,
     size_guide_key: isSizeGuideKey(values?.size_guide_key) ? values.size_guide_key : '',
     size_measurements: normalizeSizeGuide(values?.size_measurements),
     featured: Boolean(values?.featured),
@@ -248,6 +318,7 @@ export function normalizeProductDraft(values) {
 }
 
 export function productDraftFrom(product) {
+  const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['Único'];
   return {
     name: product?.name || '',
     description: product?.description || '',
@@ -257,7 +328,8 @@ export function productDraftFrom(product) {
     image_url: product?.image_url || '',
     price: product?.price ?? '',
     stock: product?.stock ?? 0,
-    sizes: Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['Único'],
+    stock_by_size: normalizeStockBySize(product?.stock_by_size, sizes),
+    sizes,
     size_guide_key: isSizeGuideKey(product?.size_guide_key)
       ? product.size_guide_key
       : guideKeyForCategory(product?.category),
@@ -277,11 +349,12 @@ export function emptyProductDraft() {
     image_url: '',
     price: '',
     stock: 0,
+    stock_by_size: { S: 0, M: 0, L: 0 },
     sizes: ['S', 'M', 'L'],
     size_guide_key: '',
     size_measurements: null,
     featured: false,
-    is_active: true,
+    is_active: false,
   };
 }
 

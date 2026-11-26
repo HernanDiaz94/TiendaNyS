@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { formatPrice } from '../lib/shop.js';
-import { isNewProduct, sortSizes, stockState } from '../lib/products.js';
+import { getSizeStock, getTotalStock, isNewProduct, sortSizes, stockState } from '../lib/products.js';
 import { ProductImage } from './ui.jsx';
 
 export function ProductCard({ product, onOpen, onAdd }) {
@@ -16,7 +16,8 @@ export function ProductCard({ product, onOpen, onAdd }) {
     if (!sizes.includes(size)) setSize(sizes[0]);
   }, [sizes, size]);
 
-  const stock = Math.max(0, Number(product.stock) || 0);
+  const stock = getTotalStock(product);
+  const selectedStock = getSizeStock(product, size);
   const state = stockState(stock);
   const isNew = isNewProduct(product.created_at);
 
@@ -43,15 +44,15 @@ export function ProductCard({ product, onOpen, onAdd }) {
           className="quick-add"
           type="button"
           onClick={() => onAdd(product, size, 1)}
-          disabled={stock < 1}
+          disabled={selectedStock < 1}
           aria-label={
-            stock < 1
-              ? `${product.name} agotado`
+            selectedStock < 1
+              ? `${product.name} talle ${size} agotado`
               : `Agregar ${product.name} talle ${size} a la bolsa`
           }
         >
           <Plus size={16} aria-hidden="true" />
-          <span>{stock < 1 ? 'Agotado' : 'Agregar'}</span>
+          <span>{selectedStock < 1 ? 'Agotado' : 'Agregar'}</span>
         </button>
       </div>
 
@@ -81,6 +82,7 @@ export function ProductCard({ product, onOpen, onAdd }) {
                 type="button"
                 className={option === size ? 'selected' : ''}
                 aria-pressed={option === size}
+                disabled={getSizeStock(product, option) < 1}
                 onClick={() => setSize(option)}
               >
                 {option}

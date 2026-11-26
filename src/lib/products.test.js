@@ -3,6 +3,9 @@ import {
   filterProducts,
   getCatalogCategories,
   getCatalogSizes,
+  getSizeStock,
+  getTotalStock,
+  normalizeStockBySize,
   normalizeAudience,
   normalizeProductDraft,
   parseSizes,
@@ -159,5 +162,51 @@ describe('product validation', () => {
     expect(draft.stock).toBe(4);
     expect(draft.featured).toBe(true);
     expect(draft.is_active).toBe(true);
+  });
+
+  it('allows a draft without sale price', () => {
+    expect(validateProduct({ ...valid, price: '', is_active: false }, { allowDraftPrice: true })).toEqual({});
+    expect(validateProduct({ ...valid, price: '', is_active: true }, { allowDraftPrice: true })).toHaveProperty('price');
+  });
+});
+
+describe('stock por talle', () => {
+  const product = {
+    id: 'p1',
+    stock: 7,
+    sizes: ['S', 'M', 'L'],
+    stock_by_size: { S: 2, M: 5, L: 0 },
+  };
+
+  it('normaliza el mapa solo con los talles declarados', () => {
+    expect(normalizeStockBySize({ S: '4', M: -2, X: 9 }, ['S', 'M', 'L'])).toEqual({
+      S: 4, M: 0, L: 0,
+    });
+  });
+
+  it('lee stock independiente por talle y total', () => {
+    expect(getSizeStock(product, 'S')).toBe(2);
+    expect(getSizeStock(product, 'M')).toBe(5);
+    expect(getSizeStock(product, 'L')).toBe(0);
+    expect(getTotalStock(product)).toBe(7);
+  });
+
+  it('mantiene compatibilidad con productos sin mapa', () => {
+    expect(getSizeStock({ stock: 3, sizes: ['Único'] }, 'Único')).toBe(3);
+    expect(getSizeStock({ stock: 3, sizes: ['S', 'M'] }, 'M')).toBe(0);
+    expect(getTotalStock({ stock: 3 })).toBe(3);
+  });
+
+  it('normalizeProductDraft deriva el total desde el mapa', () => {
+    const draft = normalizeProductDraft({
+      name: 'Buzo',
+      category: 'Abrigos',
+      price: '10000',
+      stock: 0,
+      sizes: ['S', 'M'],
+      stock_by_size: { S: 2, M: 3 },
+    });
+    expect(draft.stock).toBe(5);
+    expect(draft.stock_by_size).toEqual({ S: 2, M: 3 });
   });
 });

@@ -94,7 +94,7 @@ export function Storefront() {
     if (routeSlug && !selectedProduct) return;
     document.title = selectedProduct
       ? productSeoMeta(selectedProduct, catalog.products).title
-      : 'NyS Indumentaria — Básicos con actitud';
+      : 'NyS Indumentaria — Simples con Actitud';
   }, [selectedProduct, catalog.products, routeSlug]);
 
   const openProduct = useCallback((product) => {

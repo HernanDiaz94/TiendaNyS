@@ -295,7 +295,7 @@ La app ya detecta automáticamente Supabase: si `VITE_SUPABASE_URL` y `VITE_SUPA
 
 | Commit | Descripción |
 |--------|-------------|
-| `5cf9cf7` | feat(catalog): ropa interior, filtro hombre/mujer y guia de talles |
+| `cd45883` | feat(catalog): ropa interior, filtro hombre/mujer y guia de talles |
 | `873a7d5` | docs: registrar hero con envios dentro de Catamarca |
 | `d8824be` | fix(copy): envíos dentro de Catamarca en el hero |
 | `e043789` | fix(copy): envíos dentro de Catamarca en modal y checkout |

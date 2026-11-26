@@ -32,7 +32,6 @@ async function loadProducts() {
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     const rows = await response.json();
     const active = rows.filter((product) => product.is_active !== false);
-    if (!active.length) throw new Error('Supabase devolvió 0 productos activos');
     console.log(`[seo] ${active.length} productos activos desde Supabase.`);
     return active;
   } catch (error) {

@@ -37,14 +37,14 @@ as E'declare
   v_missing_cost integer := 0;
   v_with_stock integer := 0;
 begin
-  if TG_OP = chr(73)||chr(78)||chr(83)||chr(69)||chr(82)||chr(84) then
+  if TG_OP = (chr(73)||chr(78)||chr(83)||chr(69)||chr(82)||chr(84)) then
     if coalesce(NEW.is_active, false) then
       if NEW.price is null or NEW.price <= 0 then
-        raise exception using message = chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(80)||chr(82)||chr(73)||chr(67)||chr(69);
+        raise exception using message = (chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(80)||chr(82)||chr(73)||chr(67)||chr(69));
       end if;
       select count(*) into v_with_stock from public.product_sizes
         where product_id = NEW.id and stock > 0;
-      if v_with_stock < 1 then raise exception using message = chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75); end if;
+      if v_with_stock < 1 then raise exception using message = (chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75)); end if;
       select count(*) into v_missing_cost from public.product_sizes ps
         where ps.product_id = NEW.id and ps.stock > 0
           and not exists (
@@ -53,18 +53,18 @@ begin
               and pu.is_opening = false and pu.unit_cost is not null
               and pu.remaining_quantity > 0
           );
-      if v_missing_cost > 0 then raise exception using message = chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84); end if;
+      if v_missing_cost > 0 then raise exception using message = (chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84)); end if;
     end if;
     return NEW;
   end if;
 
   if coalesce(OLD.is_active, false) = false and coalesce(NEW.is_active, false) = true then
     if NEW.price is null or NEW.price <= 0 then
-      raise exception using message = chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(80)||chr(82)||chr(73)||chr(67)||chr(69);
+      raise exception using message = (chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(80)||chr(82)||chr(73)||chr(67)||chr(69));
     end if;
     select count(*) into v_with_stock from public.product_sizes
       where product_id = NEW.id and stock > 0;
-    if v_with_stock < 1 then raise exception using message = chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75); end if;
+    if v_with_stock < 1 then raise exception using message = (chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75)); end if;
     select count(*) into v_missing_cost from public.product_sizes ps
       where ps.product_id = NEW.id and ps.stock > 0
         and not exists (
@@ -73,7 +73,7 @@ begin
             and pu.is_opening = false and pu.unit_cost is not null
             and pu.remaining_quantity > 0
         );
-    if v_missing_cost > 0 then raise exception using message = chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84); end if;
+    if v_missing_cost > 0 then raise exception using message = (chr(80)||chr(85)||chr(66)||chr(76)||chr(73)||chr(83)||chr(72)||chr(95)||chr(82)||chr(69)||chr(81)||chr(85)||chr(73)||chr(82)||chr(69)||chr(83)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84)); end if;
   end if;
   return NEW;
 end;';
@@ -101,31 +101,31 @@ as E'declare
   v_sizes text[] := null;
   v_when timestamptz := coalesce(p_purchased_at, now());
 begin
-  if not public.is_store_admin() then raise exception using message = chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78); end if;
+  if not public.is_store_admin() then raise exception using message = (chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78)); end if;
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69));
   end if;
   v_size := btrim(p_size);
   if p_quantity is null or p_quantity < 1 or p_quantity > 9999 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(81)||chr(85)||chr(65)||chr(78)||chr(84)||chr(73)||chr(84)||chr(89);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(81)||chr(85)||chr(65)||chr(78)||chr(84)||chr(73)||chr(84)||chr(89));
   end if;
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84));
   end if;
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(85)||chr(80)||chr(80)||chr(76)||chr(73)||chr(69)||chr(82);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(85)||chr(80)||chr(80)||chr(76)||chr(73)||chr(69)||chr(82));
   end if;
   if v_when > now() + make_interval(days => 1) or v_when < make_date(2000,1,1)::timestamptz then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(68)||chr(65)||chr(84)||chr(69);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(68)||chr(65)||chr(84)||chr(69));
   end if;
 
   select name, sizes into v_name, v_sizes
     from public.products where id = p_product_id for update;
-  if not found then raise exception using message = chr(80)||chr(82)||chr(79)||chr(68)||chr(85)||chr(67)||chr(84)||chr(95)||chr(78)||chr(79)||chr(84)||chr(95)||chr(70)||chr(79)||chr(85)||chr(78)||chr(68); end if;
+  if not found then raise exception using message = (chr(80)||chr(82)||chr(79)||chr(68)||chr(85)||chr(67)||chr(84)||chr(95)||chr(78)||chr(79)||chr(84)||chr(95)||chr(70)||chr(79)||chr(85)||chr(78)||chr(68)); end if;
   if coalesce(array_length(v_sizes, 1), 0) = 0 then
-    if v_size <> (chr(217) || chr(110)||chr(105)||chr(99)||chr(111)) then raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69); end if;
+    if v_size <> (chr(217) || chr(110)||chr(105)||chr(99)||chr(111)) then raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69)); end if;
   elsif not (v_size = any(v_sizes)) then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69));
   end if;
 
   insert into public.product_sizes (product_id, size, stock, purchased_at)
@@ -182,19 +182,19 @@ as E'declare
   v_sizes text[] := null;
   v_total numeric(12,2) := 0;
 begin
-  if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ chr(91)||chr(60)||chr(62)||chr(91)||chr(58)||chr(99)||chr(110)||chr(116)||chr(114)||chr(108)||chr(58)||chr(93)||chr(93) then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(67)||chr(85)||chr(83)||chr(84)||chr(79)||chr(77)||chr(69)||chr(82)||chr(95)||chr(78)||chr(65)||chr(77)||chr(69);
+  if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ (chr(91)||chr(60)||chr(62)||chr(91)||chr(58)||chr(99)||chr(110)||chr(116)||chr(114)||chr(108)||chr(58)||chr(93)||chr(93)) then
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(67)||chr(85)||chr(83)||chr(84)||chr(79)||chr(77)||chr(69)||chr(82)||chr(95)||chr(78)||chr(65)||chr(77)||chr(69));
   end if;
   if p_customer_phone is null or char_length(btrim(p_customer_phone)) < 8 or char_length(btrim(p_customer_phone)) > 30
-     or btrim(p_customer_phone) !~ chr(94)||chr(91)||chr(43)||chr(48)||chr(45)||chr(57)||chr(32)||chr(40)||chr(41)||chr(46)||chr(45)||chr(93)||chr(43)||chr(36)
+     or btrim(p_customer_phone) !~ (chr(94)||chr(91)||chr(43)||chr(48)||chr(45)||chr(57)||chr(32)||chr(40)||chr(41)||chr(46)||chr(45)||chr(93)||chr(43)||chr(36))
      or char_length(regexp_replace(btrim(p_customer_phone), chr(91)||chr(94)||chr(48)||chr(45)||chr(57)||chr(93), left(chr(1),0), chr(103))) not between 8 and 15 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(80)||chr(72)||chr(79)||chr(78)||chr(69);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(80)||chr(72)||chr(79)||chr(78)||chr(69));
   end if;
   if p_delivery_notes is not null and char_length(p_delivery_notes) > 300 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(78)||chr(79)||chr(84)||chr(69)||chr(83);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(78)||chr(79)||chr(84)||chr(69)||chr(83));
   end if;
-  if p_items is null or jsonb_typeof(p_items) <> chr(97)||chr(114)||chr(114)||chr(97)||chr(121) or jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 20 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(73)||chr(84)||chr(69)||chr(77)||chr(83);
+  if p_items is null or jsonb_typeof(p_items) <> (chr(97)||chr(114)||chr(114)||chr(97)||chr(121)) or jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 20 then
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(73)||chr(84)||chr(69)||chr(77)||chr(83));
   end if;
 
   insert into public.orders (customer_name, customer_phone, delivery_notes, status, total)
@@ -204,29 +204,29 @@ begin
   for v_item in select value from jsonb_array_elements(p_items)
   loop
     begin
-      v_product_id := (v_item->>chr(112)||chr(114)||chr(111)||chr(100)||chr(117)||chr(99)||chr(116)||chr(95)||chr(105)||chr(100))::uuid;
-      v_quantity := (v_item->>chr(113)||chr(117)||chr(97)||chr(110)||chr(116)||chr(105)||chr(116)||chr(121))::integer;
+      v_product_id := (v_item->>(chr(112)||chr(114)||chr(111)||chr(100)||chr(117)||chr(99)||chr(116)||chr(95)||chr(105)||chr(100)))::uuid;
+      v_quantity := (v_item->>(chr(113)||chr(117)||chr(97)||chr(110)||chr(116)||chr(105)||chr(116)||chr(121)))::integer;
     exception when others then
-      raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(73)||chr(84)||chr(69)||chr(77);
+      raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(73)||chr(84)||chr(69)||chr(77));
     end;
-    v_size := coalesce(nullif(btrim(v_item->>chr(115)||chr(105)||chr(122)||chr(101)), left(chr(1),0)), (chr(217) || chr(110)||chr(105)||chr(99)||chr(111)));
+    v_size := coalesce(nullif(btrim(v_item->>(chr(115)||chr(105)||chr(122)||chr(101))), left(chr(1),0)), (chr(217) || chr(110)||chr(105)||chr(99)||chr(111)));
     if v_quantity is null or v_quantity < 1 or v_quantity > 10 or char_length(v_size) > 20 then
-      raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(73)||chr(84)||chr(69)||chr(77);
+      raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(73)||chr(84)||chr(69)||chr(77));
     end if;
 
     select p.name, p.price, p.sizes into v_name, v_price, v_sizes
       from public.products p where p.id = v_product_id and p.is_active = true for update;
-    if not found then raise exception using message = chr(73)||chr(84)||chr(69)||chr(77)||chr(95)||chr(85)||chr(78)||chr(65)||chr(86)||chr(65)||chr(73)||chr(76)||chr(65)||chr(66)||chr(76)||chr(69); end if;
+    if not found then raise exception using message = (chr(73)||chr(84)||chr(69)||chr(77)||chr(95)||chr(85)||chr(78)||chr(65)||chr(86)||chr(65)||chr(73)||chr(76)||chr(65)||chr(66)||chr(76)||chr(69)); end if;
     if coalesce(array_length(v_sizes, 1), 0) = 0 then
-      if v_size <> (chr(217) || chr(110)||chr(105)||chr(99)||chr(111)) then raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69); end if;
+      if v_size <> (chr(217) || chr(110)||chr(105)||chr(99)||chr(111)) then raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69)); end if;
     elsif not (v_size = any(v_sizes)) then
-      raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69);
+      raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69));
     end if;
 
     select stock into v_size_stock from public.product_sizes
       where product_id = v_product_id and size = v_size for update;
-    if not found then raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69); end if;
-    if v_size_stock < v_quantity then raise exception using message = chr(83)||chr(84)||chr(79)||chr(67)||chr(75)||chr(95)||chr(67)||chr(72)||chr(65)||chr(78)||chr(71)||chr(69)||chr(68); end if;
+    if not found then raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69)); end if;
+    if v_size_stock < v_quantity then raise exception using message = (chr(83)||chr(84)||chr(79)||chr(67)||chr(75)||chr(95)||chr(67)||chr(72)||chr(65)||chr(78)||chr(71)||chr(69)||chr(68)); end if;
 
     insert into public.order_items (order_id, product_id, product_name, size, quantity, unit_price)
       values (v_order_id, v_product_id, v_name, v_size, v_quantity, v_price)
@@ -278,15 +278,15 @@ as E'declare
   v_size text := null;
   v_quantity integer := null;
 begin
-  if not public.is_store_admin() then raise exception using message = chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78); end if;
+  if not public.is_store_admin() then raise exception using message = (chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78)); end if;
   if p_status not in (chr(112)||chr(101)||chr(110)||chr(100)||chr(105)||chr(101)||chr(110)||chr(116)||chr(101), chr(99)||chr(111)||chr(110)||chr(102)||chr(105)||chr(114)||chr(109)||chr(97)||chr(100)||chr(111), chr(112)||chr(114)||chr(101)||chr(112)||chr(97)||chr(114)||chr(97)||chr(110)||chr(100)||chr(111), chr(108)||chr(105)||chr(115)||chr(116)||chr(111), chr(101)||chr(110)||chr(116)||chr(114)||chr(101)||chr(103)||chr(97)||chr(100)||chr(111), chr(99)||chr(97)||chr(110)||chr(99)||chr(101)||chr(108)||chr(97)||chr(100)||chr(111)) then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(84)||chr(65)||chr(84)||chr(85)||chr(83);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(84)||chr(65)||chr(84)||chr(85)||chr(83));
   end if;
   select status into v_current_status from public.orders where id = p_order_id for update;
-  if not found then raise exception using message = chr(79)||chr(82)||chr(68)||chr(69)||chr(82)||chr(95)||chr(78)||chr(79)||chr(84)||chr(95)||chr(70)||chr(79)||chr(85)||chr(78)||chr(68); end if;
-  if v_current_status in (chr(101)||chr(110)||chr(116)||chr(114)||chr(101)||chr(103)||chr(97)||chr(100)||chr(111), chr(99)||chr(97)||chr(110)||chr(99)||chr(101)||chr(108)||chr(97)||chr(100)||chr(111)) then raise exception using message = chr(79)||chr(82)||chr(68)||chr(69)||chr(82)||chr(95)||chr(70)||chr(73)||chr(78)||chr(65)||chr(76)||chr(73)||chr(90)||chr(69)||chr(68); end if;
+  if not found then raise exception using message = (chr(79)||chr(82)||chr(68)||chr(69)||chr(82)||chr(95)||chr(78)||chr(79)||chr(84)||chr(95)||chr(70)||chr(79)||chr(85)||chr(78)||chr(68)); end if;
+  if v_current_status in (chr(101)||chr(110)||chr(116)||chr(114)||chr(101)||chr(103)||chr(97)||chr(100)||chr(111), chr(99)||chr(97)||chr(110)||chr(99)||chr(101)||chr(108)||chr(97)||chr(100)||chr(111)) then raise exception using message = (chr(79)||chr(82)||chr(68)||chr(69)||chr(82)||chr(95)||chr(70)||chr(73)||chr(78)||chr(65)||chr(76)||chr(73)||chr(90)||chr(69)||chr(68)); end if;
 
-  if p_status = chr(99)||chr(97)||chr(110)||chr(99)||chr(101)||chr(108)||chr(97)||chr(100)||chr(111) then
+  if p_status = (chr(99)||chr(97)||chr(110)||chr(99)||chr(101)||chr(108)||chr(97)||chr(100)||chr(111)) then
     for v_product_id, v_size, v_quantity in
       select oi.product_id, oi.size, sum(oi.quantity)::integer
       from public.order_items oi
@@ -335,19 +335,19 @@ as E'declare
   v_when timestamptz := coalesce(p_purchased_at, now());
   v_updated integer := 0;
 begin
-  if not public.is_store_admin() then raise exception using message = chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78); end if;
+  if not public.is_store_admin() then raise exception using message = (chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78)); end if;
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(73)||chr(90)||chr(69));
   end if;
   v_size := btrim(p_size);
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(67)||chr(79)||chr(83)||chr(84));
   end if;
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(85)||chr(80)||chr(80)||chr(76)||chr(73)||chr(69)||chr(82);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(83)||chr(85)||chr(80)||chr(80)||chr(76)||chr(73)||chr(69)||chr(82));
   end if;
   if v_when > now() + make_interval(days => 1) or v_when < make_date(2000,1,1)::timestamptz then
-    raise exception using message = chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(68)||chr(65)||chr(84)||chr(69);
+    raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(68)||chr(65)||chr(84)||chr(69));
   end if;
 
   update public.purchases
@@ -359,7 +359,7 @@ begin
    where product_id = p_product_id and size = v_size
      and is_opening = true and remaining_quantity > 0;
   get diagnostics v_updated = row_count;
-  if v_updated < 1 then raise exception using message = chr(78)||chr(79)||chr(95)||chr(79)||chr(80)||chr(69)||chr(78)||chr(73)||chr(78)||chr(71)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75); end if;
+  if v_updated < 1 then raise exception using message = (chr(78)||chr(79)||chr(95)||chr(79)||chr(80)||chr(69)||chr(78)||chr(73)||chr(78)||chr(71)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75)); end if;
 
   update public.product_sizes
      set purchased_at = v_when

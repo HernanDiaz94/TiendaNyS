@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b0b0b" />
     <meta name="color-scheme" content="light" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('nys-theme');
+          if (stored !== 'light' && stored !== 'dark') return;
+          document.documentElement.dataset.theme = stored;
+          document.documentElement.style.colorScheme = stored;
+          var scheme = document.querySelector('meta[name="color-scheme"]');
+          if (scheme) scheme.setAttribute('content', stored);
+          var color = document.querySelector('meta[name="theme-color"]');
+          if (color) color.setAttribute('content', stored === 'dark' ? '#10110f' : '#0b0b0b');
+        } catch (error) {}
+      })();
+    </script>
     <meta
       name="description"
       content="NyS Indumentaria — básicos urbanos con actitud. Remeras, pantalones, abrigos, calzado y accesorios. Comprá sin cuenta y coordinamos por WhatsApp."

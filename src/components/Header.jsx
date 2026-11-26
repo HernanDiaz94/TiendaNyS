@@ -1,4 +1,5 @@
 import { ArrowUpRight, Instagram, Search, ShoppingBag } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle.jsx';
 
 export function Header({ count, onCart, onSearch, instagramUrl }) {
   return (
@@ -26,6 +27,7 @@ export function Header({ count, onCart, onSearch, instagramUrl }) {
         </nav>
 
         <div className="head-actions">
+          <ThemeToggle />
           <button className="icon-btn" type="button" onClick={onSearch} aria-label="Buscar productos">
             <Search size={19} aria-hidden="true" />
           </button>

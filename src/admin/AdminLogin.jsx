@@ -10,6 +10,7 @@ import {
   ShoppingBag,
   UserPlus,
 } from 'lucide-react';
+import { ThemeToggle } from '../components/ThemeToggle.jsx';
 import { ErrorNote, Notice, Spinner } from '../components/ui.jsx';
 
 export function AdminLogin({ onLogin, onSignUp, isDemo }) {
@@ -75,6 +76,7 @@ export function AdminLogin({ onLogin, onSignUp, isDemo }) {
       </aside>
 
       <section className="login-panel">
+        <ThemeToggle />
         <div className="login-card">
           <a className="login-logo" href="/" aria-label="NyS Indumentaria, inicio">
             <span>N<span>&amp;</span>S</span>

@@ -1,5 +1,6 @@
 import { AdminLogin } from './AdminLogin.jsx';
 import { AdminPanel } from './AdminPanel.jsx';
+import { ThemeToggle } from '../components/ThemeToggle.jsx';
 import { Spinner } from '../components/ui.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
@@ -9,6 +10,7 @@ export default function AdminApp() {
   if (!auth.ready) {
     return (
       <main className="auth-loading">
+        <ThemeToggle />
         <a className="login-logo" href="/">
           <span>N<span>&amp;</span>S</span>
           <small>INDUMENTARIA</small>

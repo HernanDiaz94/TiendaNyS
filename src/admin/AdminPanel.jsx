@@ -33,6 +33,7 @@ import { ProfitReport } from './ProfitReport.jsx';
 import { ProductForm } from './ProductForm.jsx';
 import { PurchaseForm } from './PurchaseForm.jsx';
 import { Modal } from '../components/Modal.jsx';
+import { ThemeToggle } from '../components/ThemeToggle.jsx';
 import { Notice, ProductImage, Spinner } from '../components/ui.jsx';
 
 const STATUS_META = {
@@ -351,6 +352,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
         <div className="admin-bar-actions">
           {isDemo && <span className="demo-pill">DEMO</span>}
           <span className="admin-email">{session?.user?.email || 'admin@nys'}</span>
+          <ThemeToggle />
           <button
             className="icon-btn"
             type="button"

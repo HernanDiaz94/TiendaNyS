@@ -20,7 +20,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - **Estilos:** CSS vanilla (paleta tierra suave)
 - **Backend:** Supabase (opcional, modo demo con localStorage)
 - **Hosting:** Vercel (deploy automático desde GitHub)
-- **Testing:** Vitest (75 tests)
+- **Testing:** Vitest (80 tests)
 
 ---
 
@@ -40,6 +40,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 - [x] Footer con dirección (ícono de ubicación), horarios separados y WhatsApp
 - [x] Marquee animado
 - [x] Diseño responsive
+- [x] Tema claro/oscuro con botón en tienda, login y panel; se guarda en `localStorage` (`nys-theme`) y se aplica antes del render
 
 ### Admin Panel
 - [x] Login con usuario `admin` / clave `nys-demo` o con correo registrado
@@ -77,7 +78,7 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/config/site.js` | Configuración editable (dirección, horarios, envíos) |
 | `vercel.json` | Rewrites para SPA routing (admin route) |
 | `netlify.toml` | Configuración de Netlify (pausado) |
-| `index.html` | Meta tag CSP para fix de errores de consola |
+| `index.html` | Meta tags, script inline que restaura el tema antes del render y CSP para fix de errores de consola |
 
 ### Componentes
 | Archivo | Descripción |
@@ -90,7 +91,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/components/Catalog.jsx` | Catálogo con filtros de categoría, público, talle y búsqueda |
 | `src/components/ProductModal.jsx` | Modal de detalle con guía de talles y etiqueta de público |
 | `src/components/CartDrawer.jsx` | Carrito de compras lateral |
-| `src/components/Header.jsx` | Header con búsqueda y navegación |
+| `src/components/Header.jsx` | Header con búsqueda, navegación y botón de tema |
+| `src/components/ThemeToggle.jsx` | Botón claro/oscuro (Sol/Luna) reutilizado en tienda y admin |
 | `src/components/ui.jsx` | Componentes UI (ProductImage, etc.) |
 
 ### Datos
@@ -100,6 +102,8 @@ Modo demo funcional con password `nys-demo` (sin Supabase conectado). También p
 | `src/lib/products.js` | Categorías, normalización de público y filtrado (unisex en Hombre y Mujer) |
 | `src/lib/sizeGuides.js` | Guías genéricas (incluye `interior`), normalización y resolución por producto |
 | `src/lib/demoStore.js` | Persistencia demo; migra fotos y agrega los 3 artículos nuevos sin borrar stock |
+| `src/lib/theme.js` / `src/hooks/useTheme.js` | Normalización, persistencia y aplicación del tema claro/oscuro (con tests) |
+| `src/styles.css` | Variables de tema con bloque `[data-theme='dark']` y estilos `.theme-*` |
 
 ### Admin
 | Archivo | Descripción |
@@ -463,6 +467,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Agregar sistema de reviews/calificaciones
 - [ ] Configurar dominio personalizado
 - [x] Vercel Web Analytics activo y verificado (sin cookies ni ID, solo tienda — 22/11/2026)
+- [x] Tema claro/oscuro en toda la app (26/11/2026): botón en tienda, login y panel, persistido en `localStorage`, sin parpadeo gracias al script inline en `index.html` (también en las páginas SEO generadas)
 
 ---
 

@@ -2,7 +2,7 @@
 -- ASCII-only e idempotente. Ejecutar completo con "Run without RLS".
 -- NyS: stock por talle, costo por talle y publicacion con costo.
 -- ASCII-only e idempotente. Ejecutar con "Run without RLS".
--- Este paso no crea funciones; el paso 2 usa cuerpos con $$ para que el
+-- Los cuerpos usan as E'...' con punto y coma codificado como \073 para que el
 -- splitter del SQL Editor no corte las funciones.
 
 create extension if not exists pgcrypto;

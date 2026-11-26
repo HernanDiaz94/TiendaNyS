@@ -492,28 +492,28 @@ as E'declare
   v_name text := null\073
   v_when timestamptz := coalesce(p_purchased_at, now())\073
 begin
-  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if\073
+  if not public.is_store_admin() then raise exception \047NOT_ADMIN\047\073 end if\073
   if p_quantity is null or p_quantity < 1 or p_quantity > 9999 then
-    raise exception \'INVALID_QUANTITY\'\073
+    raise exception \047INVALID_QUANTITY\047\073
   end if\073
   if p_unit_cost is not null and (p_unit_cost < 0 or p_unit_cost > 99999999) then
-    raise exception \'INVALID_COST\'\073
+    raise exception \047INVALID_COST\047\073
   end if\073
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
-    raise exception \'INVALID_SUPPLIER\'\073
+    raise exception \047INVALID_SUPPLIER\047\073
   end if\073
-  if v_when > now() + interval \'1 day\' or v_when < timestamptz \'2000-01-01\' then
-    raise exception \'INVALID_DATE\'\073
+  if v_when > now() + interval \0471 day\047 or v_when < timestamptz \0472000-01-01\047 then
+    raise exception \047INVALID_DATE\047\073
   end if\073
 
   select name into v_name from public.products where id = p_product_id for update\073
-  if not found then raise exception \'PRODUCT_NOT_FOUND\'\073 end if\073
+  if not found then raise exception \047PRODUCT_NOT_FOUND\047\073 end if\073
 
   insert into public.purchases
     (product_id, product_name, quantity, remaining_quantity, unit_cost, supplier, purchased_at, is_opening, is_legacy)
   values
     (p_product_id, v_name, p_quantity, p_quantity, p_unit_cost,
-     coalesce(btrim(p_supplier), \'\'), v_when, false, false)\073
+     coalesce(btrim(p_supplier), \047\047), v_when, false, false)\073
 
   update public.products set stock = least(9999, stock + p_quantity), purchased_at = case when stock > 0 and purchased_at is not null then least(purchased_at, v_when) else v_when end where id = p_product_id\073
 
@@ -553,47 +553,47 @@ as E'declare
   v_sizes text[] := null\073
   v_total numeric(12,2) := 0\073
 begin
-  if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ \'[<>[:cntrl:]]\' then
-    raise exception \'INVALID_CUSTOMER_NAME\'\073
+  if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ \047[<>[:cntrl:]]\047 then
+    raise exception \047INVALID_CUSTOMER_NAME\047\073
   end if\073
   if p_customer_phone is null or char_length(btrim(p_customer_phone)) < 8 or char_length(btrim(p_customer_phone)) > 30
-     or btrim(p_customer_phone) !~ \'^[+0-9 ().-]+$\'
-     or char_length(regexp_replace(btrim(p_customer_phone), \'[^0-9]\', \'\', \'g\')) not between 8 and 15 then
-    raise exception \'INVALID_PHONE\'\073
+     or btrim(p_customer_phone) !~ \047^[+0-9 ().-]+$\047
+     or char_length(regexp_replace(btrim(p_customer_phone), \047[^0-9]\047, \047\047, \047g\047)) not between 8 and 15 then
+    raise exception \047INVALID_PHONE\047\073
   end if\073
   if p_delivery_notes is not null and char_length(p_delivery_notes) > 300 then
-    raise exception \'INVALID_NOTES\'\073
+    raise exception \047INVALID_NOTES\047\073
   end if\073
-  if p_items is null or jsonb_typeof(p_items) <> \'array\' or jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 20 then
-    raise exception \'INVALID_ITEMS\'\073
+  if p_items is null or jsonb_typeof(p_items) <> \047array\047 or jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 20 then
+    raise exception \047INVALID_ITEMS\047\073
   end if\073
 
   insert into public.orders (customer_name, customer_phone, delivery_notes, status, total)
-  values (btrim(p_customer_name), btrim(p_customer_phone), coalesce(btrim(p_delivery_notes), \'\'), \'pendiente\', 0)
+  values (btrim(p_customer_name), btrim(p_customer_phone), coalesce(btrim(p_delivery_notes), \047\047), \047pendiente\047, 0)
   returning id into v_order_id\073
 
   for v_item in select value from jsonb_array_elements(p_items)
   loop
     begin
-      v_product_id := (v_item->>\'product_id\')::uuid\073
-      v_quantity := (v_item->>\'quantity\')::integer\073
+      v_product_id := (v_item->>\047product_id\047)::uuid\073
+      v_quantity := (v_item->>\047quantity\047)::integer\073
     exception when others then
-      raise exception \'INVALID_ITEM\'\073
+      raise exception \047INVALID_ITEM\047\073
     end\073
-    v_size := coalesce(nullif(btrim(v_item->>\'size\'), \'\'), (chr(217) || \'nico\'))\073
+    v_size := coalesce(nullif(btrim(v_item->>\047size\047), \047\047), (chr(217) || \047nico\047))\073
     if v_quantity is null or v_quantity < 1 or v_quantity > 10 or char_length(v_size) > 20 then
-      raise exception \'INVALID_ITEM\'\073
+      raise exception \047INVALID_ITEM\047\073
     end if\073
 
     select p.name, p.price, p.stock, p.sizes into v_name, v_price, v_stock, v_sizes
       from public.products p where p.id = v_product_id and p.is_active = true for update\073
-    if not found then raise exception \'ITEM_UNAVAILABLE\'\073 end if\073
+    if not found then raise exception \047ITEM_UNAVAILABLE\047\073 end if\073
     if coalesce(array_length(v_sizes, 1), 0) = 0 then
-      if v_size <> (chr(217) || \'nico\') then raise exception \'INVALID_SIZE\'\073 end if\073
+      if v_size <> (chr(217) || \047nico\047) then raise exception \047INVALID_SIZE\047\073 end if\073
     elsif not (v_size = any(v_sizes)) then
-      raise exception \'INVALID_SIZE\'\073
+      raise exception \047INVALID_SIZE\047\073
     end if\073
-    if v_stock < v_quantity then raise exception \'STOCK_CHANGED\'\073 end if\073
+    if v_stock < v_quantity then raise exception \047STOCK_CHANGED\047\073 end if\073
 
     insert into public.order_items (order_id, product_id, product_name, size, quantity, unit_price)
       values (v_order_id, v_product_id, v_name, v_size, v_quantity, v_price)
@@ -625,7 +625,7 @@ begin
   end loop\073
 
   update public.orders set total = v_total where id = v_order_id\073
-  return jsonb_build_object(\'order_id\', v_order_id, \'total\', v_total)\073
+  return jsonb_build_object(\047order_id\047, v_order_id, \047total\047, v_total)\073
 end\073';
 
 revoke all on function public.place_order(text, text, text, jsonb) from public, authenticated;
@@ -642,15 +642,15 @@ as E'declare
   v_lot_purchase_id uuid := null\073
   v_lot_quantity integer := null\073
 begin
-  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if\073
-  if p_status not in (\'pendiente\', \'confirmado\', \'preparando\', \'listo\', \'entregado\', \'cancelado\') then
-    raise exception \'INVALID_STATUS\'\073
+  if not public.is_store_admin() then raise exception \047NOT_ADMIN\047\073 end if\073
+  if p_status not in (\047pendiente\047, \047confirmado\047, \047preparando\047, \047listo\047, \047entregado\047, \047cancelado\047) then
+    raise exception \047INVALID_STATUS\047\073
   end if\073
   select status into v_current_status from public.orders where id = p_order_id for update\073
-  if not found then raise exception \'ORDER_NOT_FOUND\'\073 end if\073
-  if v_current_status in (\'entregado\', \'cancelado\') then raise exception \'ORDER_FINALIZED\'\073 end if\073
+  if not found then raise exception \047ORDER_NOT_FOUND\047\073 end if\073
+  if v_current_status in (\047entregado\047, \047cancelado\047) then raise exception \047ORDER_FINALIZED\047\073 end if\073
 
-  if p_status = \'cancelado\' then
+  if p_status = \047cancelado\047 then
     update public.products p set stock = least(9999, p.stock + reserved.quantity) from (select oi.product_id, sum(oi.quantity)::integer as quantity from public.order_items oi where oi.order_id = p_order_id and oi.product_id is not null group by oi.product_id) reserved where reserved.product_id = p.id\073
 
     for v_lot_purchase_id, v_lot_quantity in
@@ -808,14 +808,14 @@ as E'declare
   v_missing_cost integer := 0\073
   v_with_stock integer := 0\073
 begin
-  if TG_OP = \'INSERT\' then
+  if TG_OP = \047INSERT\047 then
     if coalesce(NEW.is_active, false) then
       if NEW.price is null or NEW.price <= 0 then
-        raise exception \'PUBLISH_REQUIRES_PRICE\'\073
+        raise exception \047PUBLISH_REQUIRES_PRICE\047\073
       end if\073
       select count(*) into v_with_stock from public.product_sizes
         where product_id = NEW.id and stock > 0\073
-      if v_with_stock < 1 then raise exception \'PUBLISH_REQUIRES_STOCK\'\073 end if\073
+      if v_with_stock < 1 then raise exception \047PUBLISH_REQUIRES_STOCK\047\073 end if\073
       select count(*) into v_missing_cost from public.product_sizes ps
         where ps.product_id = NEW.id and ps.stock > 0
           and not exists (
@@ -824,18 +824,18 @@ begin
               and pu.is_opening = false and pu.unit_cost is not null
               and pu.remaining_quantity > 0
           )\073
-      if v_missing_cost > 0 then raise exception \'PUBLISH_REQUIRES_COST\'\073 end if\073
+      if v_missing_cost > 0 then raise exception \047PUBLISH_REQUIRES_COST\047\073 end if\073
     end if\073
     return NEW\073
   end if\073
 
   if coalesce(OLD.is_active, false) = false and coalesce(NEW.is_active, false) = true then
     if NEW.price is null or NEW.price <= 0 then
-      raise exception \'PUBLISH_REQUIRES_PRICE\'\073
+      raise exception \047PUBLISH_REQUIRES_PRICE\047\073
     end if\073
     select count(*) into v_with_stock from public.product_sizes
       where product_id = NEW.id and stock > 0\073
-    if v_with_stock < 1 then raise exception \'PUBLISH_REQUIRES_STOCK\'\073 end if\073
+    if v_with_stock < 1 then raise exception \047PUBLISH_REQUIRES_STOCK\047\073 end if\073
     select count(*) into v_missing_cost from public.product_sizes ps
       where ps.product_id = NEW.id and ps.stock > 0
         and not exists (
@@ -844,7 +844,7 @@ begin
             and pu.is_opening = false and pu.unit_cost is not null
             and pu.remaining_quantity > 0
         )\073
-    if v_missing_cost > 0 then raise exception \'PUBLISH_REQUIRES_COST\'\073 end if\073
+    if v_missing_cost > 0 then raise exception \047PUBLISH_REQUIRES_COST\047\073 end if\073
   end if\073
   return NEW\073
 end\073';
@@ -872,31 +872,31 @@ as E'declare
   v_sizes text[] := null\073
   v_when timestamptz := coalesce(p_purchased_at, now())\073
 begin
-  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if\073
+  if not public.is_store_admin() then raise exception \047NOT_ADMIN\047\073 end if\073
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
-    raise exception \'INVALID_SIZE\'\073
+    raise exception \047INVALID_SIZE\047\073
   end if\073
   v_size := btrim(p_size)\073
   if p_quantity is null or p_quantity < 1 or p_quantity > 9999 then
-    raise exception \'INVALID_QUANTITY\'\073
+    raise exception \047INVALID_QUANTITY\047\073
   end if\073
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
-    raise exception \'INVALID_COST\'\073
+    raise exception \047INVALID_COST\047\073
   end if\073
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
-    raise exception \'INVALID_SUPPLIER\'\073
+    raise exception \047INVALID_SUPPLIER\047\073
   end if\073
-  if v_when > now() + interval \'1 day\' or v_when < timestamptz \'2000-01-01\' then
-    raise exception \'INVALID_DATE\'\073
+  if v_when > now() + interval \0471 day\047 or v_when < timestamptz \0472000-01-01\047 then
+    raise exception \047INVALID_DATE\047\073
   end if\073
 
   select name, sizes into v_name, v_sizes
     from public.products where id = p_product_id for update\073
-  if not found then raise exception \'PRODUCT_NOT_FOUND\'\073 end if\073
+  if not found then raise exception \047PRODUCT_NOT_FOUND\047\073 end if\073
   if coalesce(array_length(v_sizes, 1), 0) = 0 then
-    if v_size <> (chr(217) || \'nico\') then raise exception \'INVALID_SIZE\'\073 end if\073
+    if v_size <> (chr(217) || \047nico\047) then raise exception \047INVALID_SIZE\047\073 end if\073
   elsif not (v_size = any(v_sizes)) then
-    raise exception \'INVALID_SIZE\'\073
+    raise exception \047INVALID_SIZE\047\073
   end if\073
 
   insert into public.product_sizes (product_id, size, stock, purchased_at)
@@ -908,7 +908,7 @@ begin
      supplier, purchased_at, is_opening, is_legacy)
   values
     (p_product_id, v_name, v_size, p_quantity, p_quantity, p_unit_cost,
-     coalesce(btrim(p_supplier), \'\'), v_when, false, false)\073
+     coalesce(btrim(p_supplier), \047\047), v_when, false, false)\073
 
   update public.product_sizes
      set stock = least(9999, stock + p_quantity),
@@ -953,51 +953,51 @@ as E'declare
   v_sizes text[] := null\073
   v_total numeric(12,2) := 0\073
 begin
-  if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ \'[<>[:cntrl:]]\' then
-    raise exception \'INVALID_CUSTOMER_NAME\'\073
+  if p_customer_name is null or char_length(btrim(p_customer_name)) < 2 or char_length(btrim(p_customer_name)) > 100 or p_customer_name ~ \047[<>[:cntrl:]]\047 then
+    raise exception \047INVALID_CUSTOMER_NAME\047\073
   end if\073
   if p_customer_phone is null or char_length(btrim(p_customer_phone)) < 8 or char_length(btrim(p_customer_phone)) > 30
-     or btrim(p_customer_phone) !~ \'^[+0-9 ().-]+$\'
-     or char_length(regexp_replace(btrim(p_customer_phone), \'[^0-9]\', \'\', \'g\')) not between 8 and 15 then
-    raise exception \'INVALID_PHONE\'\073
+     or btrim(p_customer_phone) !~ \047^[+0-9 ().-]+$\047
+     or char_length(regexp_replace(btrim(p_customer_phone), \047[^0-9]\047, \047\047, \047g\047)) not between 8 and 15 then
+    raise exception \047INVALID_PHONE\047\073
   end if\073
   if p_delivery_notes is not null and char_length(p_delivery_notes) > 300 then
-    raise exception \'INVALID_NOTES\'\073
+    raise exception \047INVALID_NOTES\047\073
   end if\073
-  if p_items is null or jsonb_typeof(p_items) <> \'array\' or jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 20 then
-    raise exception \'INVALID_ITEMS\'\073
+  if p_items is null or jsonb_typeof(p_items) <> \047array\047 or jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 20 then
+    raise exception \047INVALID_ITEMS\047\073
   end if\073
 
   insert into public.orders (customer_name, customer_phone, delivery_notes, status, total)
-  values (btrim(p_customer_name), btrim(p_customer_phone), coalesce(btrim(p_delivery_notes), \'\'), \'pendiente\', 0)
+  values (btrim(p_customer_name), btrim(p_customer_phone), coalesce(btrim(p_delivery_notes), \047\047), \047pendiente\047, 0)
   returning id into v_order_id\073
 
   for v_item in select value from jsonb_array_elements(p_items)
   loop
     begin
-      v_product_id := (v_item->>\'product_id\')::uuid\073
-      v_quantity := (v_item->>\'quantity\')::integer\073
+      v_product_id := (v_item->>\047product_id\047)::uuid\073
+      v_quantity := (v_item->>\047quantity\047)::integer\073
     exception when others then
-      raise exception \'INVALID_ITEM\'\073
+      raise exception \047INVALID_ITEM\047\073
     end\073
-    v_size := coalesce(nullif(btrim(v_item->>\'size\'), \'\'), (chr(217) || \'nico\'))\073
+    v_size := coalesce(nullif(btrim(v_item->>\047size\047), \047\047), (chr(217) || \047nico\047))\073
     if v_quantity is null or v_quantity < 1 or v_quantity > 10 or char_length(v_size) > 20 then
-      raise exception \'INVALID_ITEM\'\073
+      raise exception \047INVALID_ITEM\047\073
     end if\073
 
     select p.name, p.price, p.sizes into v_name, v_price, v_sizes
       from public.products p where p.id = v_product_id and p.is_active = true for update\073
-    if not found then raise exception \'ITEM_UNAVAILABLE\'\073 end if\073
+    if not found then raise exception \047ITEM_UNAVAILABLE\047\073 end if\073
     if coalesce(array_length(v_sizes, 1), 0) = 0 then
-      if v_size <> (chr(217) || \'nico\') then raise exception \'INVALID_SIZE\'\073 end if\073
+      if v_size <> (chr(217) || \047nico\047) then raise exception \047INVALID_SIZE\047\073 end if\073
     elsif not (v_size = any(v_sizes)) then
-      raise exception \'INVALID_SIZE\'\073
+      raise exception \047INVALID_SIZE\047\073
     end if\073
 
     select stock into v_size_stock from public.product_sizes
       where product_id = v_product_id and size = v_size for update\073
-    if not found then raise exception \'INVALID_SIZE\'\073 end if\073
-    if v_size_stock < v_quantity then raise exception \'STOCK_CHANGED\'\073 end if\073
+    if not found then raise exception \047INVALID_SIZE\047\073 end if\073
+    if v_size_stock < v_quantity then raise exception \047STOCK_CHANGED\047\073 end if\073
 
     insert into public.order_items (order_id, product_id, product_name, size, quantity, unit_price)
       values (v_order_id, v_product_id, v_name, v_size, v_quantity, v_price)
@@ -1030,7 +1030,7 @@ begin
   end loop\073
 
   update public.orders set total = v_total where id = v_order_id\073
-  return jsonb_build_object(\'order_id\', v_order_id, \'total\', v_total)\073
+  return jsonb_build_object(\047order_id\047, v_order_id, \047total\047, v_total)\073
 end\073';
 
 revoke all on function public.place_order(text, text, text, jsonb) from public, authenticated;
@@ -1049,15 +1049,15 @@ as E'declare
   v_size text := null\073
   v_quantity integer := null\073
 begin
-  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if\073
-  if p_status not in (\'pendiente\', \'confirmado\', \'preparando\', \'listo\', \'entregado\', \'cancelado\') then
-    raise exception \'INVALID_STATUS\'\073
+  if not public.is_store_admin() then raise exception \047NOT_ADMIN\047\073 end if\073
+  if p_status not in (\047pendiente\047, \047confirmado\047, \047preparando\047, \047listo\047, \047entregado\047, \047cancelado\047) then
+    raise exception \047INVALID_STATUS\047\073
   end if\073
   select status into v_current_status from public.orders where id = p_order_id for update\073
-  if not found then raise exception \'ORDER_NOT_FOUND\'\073 end if\073
-  if v_current_status in (\'entregado\', \'cancelado\') then raise exception \'ORDER_FINALIZED\'\073 end if\073
+  if not found then raise exception \047ORDER_NOT_FOUND\047\073 end if\073
+  if v_current_status in (\047entregado\047, \047cancelado\047) then raise exception \047ORDER_FINALIZED\047\073 end if\073
 
-  if p_status = \'cancelado\' then
+  if p_status = \047cancelado\047 then
     for v_product_id, v_size, v_quantity in
       select oi.product_id, oi.size, sum(oi.quantity)::integer
       from public.order_items oi
@@ -1106,31 +1106,31 @@ as E'declare
   v_when timestamptz := coalesce(p_purchased_at, now())\073
   v_updated integer := 0\073
 begin
-  if not public.is_store_admin() then raise exception \'NOT_ADMIN\'\073 end if\073
+  if not public.is_store_admin() then raise exception \047NOT_ADMIN\047\073 end if\073
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
-    raise exception \'INVALID_SIZE\'\073
+    raise exception \047INVALID_SIZE\047\073
   end if\073
   v_size := btrim(p_size)\073
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
-    raise exception \'INVALID_COST\'\073
+    raise exception \047INVALID_COST\047\073
   end if\073
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
-    raise exception \'INVALID_SUPPLIER\'\073
+    raise exception \047INVALID_SUPPLIER\047\073
   end if\073
-  if v_when > now() + interval \'1 day\' or v_when < timestamptz \'2000-01-01\' then
-    raise exception \'INVALID_DATE\'\073
+  if v_when > now() + interval \0471 day\047 or v_when < timestamptz \0472000-01-01\047 then
+    raise exception \047INVALID_DATE\047\073
   end if\073
 
   update public.purchases
      set unit_cost = p_unit_cost,
          is_opening = false,
          is_legacy = false,
-         supplier = coalesce(nullif(btrim(p_supplier), \'\'), supplier),
+         supplier = coalesce(nullif(btrim(p_supplier), \047\047), supplier),
          purchased_at = v_when
    where product_id = p_product_id and size = v_size
      and is_opening = true and remaining_quantity > 0\073
   get diagnostics v_updated = row_count\073
-  if v_updated < 1 then raise exception \'NO_OPENING_STOCK\'\073 end if\073
+  if v_updated < 1 then raise exception \047NO_OPENING_STOCK\047\073 end if\073
 
   update public.product_sizes
      set purchased_at = v_when

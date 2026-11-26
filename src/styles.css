@@ -3919,6 +3919,25 @@ a {
   text-decoration: underline;
 }
 
+.inventory-alert__body {
+  flex: 1;
+  min-width: 200px;
+}
+
+.inventory-alert__names {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.inventory-alert__names .link-btn {
+  font-size: 10px;
+  color: inherit;
+}
+
 .purchase-list {
   display: grid;
   gap: 8px;

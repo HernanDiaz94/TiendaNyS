@@ -24,9 +24,9 @@ import { listDemoOrders, resetDemoData, updateDemoOrderStatus } from '../lib/dem
 import { buildWhatsAppUrl, formatPrice, shortReference } from '../lib/shop.js';
 import {
   formatShortDate,
-  hasCostedPurchase,
   isStaleStock,
   listStaleProducts,
+  sizeHasCost,
 } from '../lib/inventory.js';
 import { getSizeStock, getTotalStock, normalizeText } from '../lib/products.js';
 import { BulkCostForm } from './BulkCostForm.jsx';
@@ -162,8 +162,18 @@ export function AdminPanel({ session, isDemo, onLogout }) {
   );
 
   const productsWithoutCost = useMemo(
-    () => catalog.products.filter((product) => !hasCostedPurchase(purchasesLog.purchases, product.id)),
+    () => catalog.products.filter((product) => {
+      const sizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Único'];
+      return sizes.some((size) => (
+        getSizeStock(product, size) > 0
+        && !sizeHasCost(purchasesLog.purchases, product.id, size)
+      ));
+    }),
     [catalog.products, purchasesLog.purchases],
+  );
+  const noCostIds = useMemo(
+    () => new Set(productsWithoutCost.map((product) => String(product.id))),
+    [productsWithoutCost],
   );
 
   const stats = useMemo(() => {
@@ -466,10 +476,28 @@ export function AdminPanel({ session, isDemo, onLogout }) {
         {productsWithoutCost.length > 0 && (
           <div className="inventory-alert">
             <AlertTriangle size={17} aria-hidden="true" />
-            <p>
-              <strong>{productsWithoutCost.length === 1 ? 'Hay 1 artículo' : `Hay ${productsWithoutCost.length} artículos`}</strong>
-              {' '}sin costo cargado. Regularizá esos ingresos para calcular la rentabilidad y poder publicar.
-            </p>
+            <div className="inventory-alert__body">
+              <p>
+                <strong>{productsWithoutCost.length === 1 ? 'Hay 1 artículo' : `Hay ${productsWithoutCost.length} artículos`}</strong>
+                {' '}sin costo cargado. Regularizá esos ingresos para calcular la rentabilidad y poder publicar.
+              </p>
+              <div className="inventory-alert__names">
+                <span>Pendientes:</span>
+                {productsWithoutCost.slice(0, 5).map((product) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    className="link-btn link-btn--inline"
+                    onClick={() => openBulkCost(product)}
+                  >
+                    {product.name}
+                  </button>
+                ))}
+                {productsWithoutCost.length > 5 && (
+                  <span>y {productsWithoutCost.length - 5} más</span>
+                )}
+              </div>
+            </div>
             <button
               type="button"
               className="link-btn"
@@ -731,7 +759,7 @@ export function AdminPanel({ session, isDemo, onLogout }) {
                   const isOut = getTotalStock(product) < 1;
                   const isInactive = product.is_active === false;
                   const isStale = isStaleStock(product);
-                  const isNoCost = !hasCostedPurchase(purchasesLog.purchases, product.id);
+                  const isNoCost = noCostIds.has(String(product.id));
                   const rowBusy = busyKey.includes(product.id);
                   return (
                     <article

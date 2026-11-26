@@ -468,6 +468,7 @@ git checkout hero-valle-chico -- src/components/Hero.jsx
 - [ ] Configurar dominio personalizado
 - [x] Vercel Web Analytics activo y verificado (sin cookies ni ID, solo tienda — 22/11/2026)
 - [x] Tema claro/oscuro en toda la app (26/11/2026): botón en tienda, login y panel, persistido en `localStorage`, sin parpadeo gracias al script inline en `index.html` (también en las páginas SEO generadas)
+- [x] Header mejorado en modo oscuro (26/11/2026): fondo oscuro con blur (antes quedaba claro), botones con superficie y hover en acento, y bolsa en lima con contador invertido
 
 ---
 

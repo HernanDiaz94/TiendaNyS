@@ -25,6 +25,7 @@
   --pad: clamp(18px, 4vw, 56px);
   --radius: 4px;
   --shadow: 0 12px 50px rgba(0, 0, 0, 0.06);
+  --head-bg: rgba(243, 243, 239, 0.94);
   --text: #1e1e16;
   --on-ink: #ffffff;
   --on-accent: #1e1e16;
@@ -72,6 +73,7 @@
   --danger-soft: #3a2020;
   --success: #63c46a;
   --shadow: 0 12px 50px rgba(0, 0, 0, 0.45);
+  --head-bg: rgba(18, 20, 17, 0.94);
   --text: #f4f4ef;
   --warning-bg: #33280f;
   --warning-border: #8a6b24;
@@ -442,7 +444,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(243, 243, 239, 0.94);
+  background: var(--head-bg);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
@@ -562,6 +564,40 @@ a {
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 800;
+}
+
+/* Header en modo oscuro: fondo acorde y controles con más jerarquía */
+[data-theme='dark'] .head-nav a:hover {
+  color: var(--accent);
+}
+
+[data-theme='dark'] .head-actions .theme-toggle,
+[data-theme='dark'] .head-actions .icon-btn {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}
+
+[data-theme='dark'] .head-actions .theme-toggle:hover,
+[data-theme='dark'] .head-actions .icon-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+[data-theme='dark'] .cart-btn {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+[data-theme='dark'] .cart-btn:hover {
+  border-color: #c2ec33;
+  background: #c2ec33;
+}
+
+[data-theme='dark'] .cart-btn b {
+  background: var(--ink);
+  color: var(--accent);
 }
 
 /* ---------- Hero ---------- */

@@ -627,24 +627,31 @@ language plpgsql
 security definer
 set search_path = pg_catalog, public
 as E'declare
-  v_size text := null\073
-  v_when timestamptz := coalesce(p_purchased_at, now())\073
-  v_updated integer := 0\073
+  v_size text := null;
+  v_when timestamptz := coalesce(p_purchased_at, now());
+  v_updated integer := 0;
+  v_stock integer := 0;
 begin
-  if not public.is_store_admin() then raise exception \047NOT_ADMIN\047\073 end if\073
+  if not public.is_store_admin() then raise exception using message = \047NOT_ADMIN\047; end if;
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
-    raise exception \047INVALID_SIZE\047\073
-  end if\073
-  v_size := btrim(p_size)\073
+    raise exception using message = \047INVALID_SIZE\047;
+  end if;
+  v_size := btrim(p_size);
   if p_unit_cost is null or p_unit_cost < 0 or p_unit_cost > 99999999 then
-    raise exception \047INVALID_COST\047\073
-  end if\073
+    raise exception using message = \047INVALID_COST\047;
+  end if;
   if p_supplier is not null and char_length(btrim(p_supplier)) > 80 then
-    raise exception \047INVALID_SUPPLIER\047\073
-  end if\073
-  if v_when > now() + interval \0471 day\047 or v_when < timestamptz \0472000-01-01\047 then
-    raise exception \047INVALID_DATE\047\073
-  end if\073
+    raise exception using message = \047INVALID_SUPPLIER\047;
+  end if;
+  if v_when > now() + make_interval(days => 1) or v_when < make_date(2000,1,1)::timestamptz then
+    raise exception using message = \047INVALID_DATE\047;
+  end if;
+
+  select stock into v_stock
+    from public.product_sizes
+   where product_id = p_product_id and size = v_size;
+  if not found then raise exception using message = \047NO_OPENING_STOCK\047; end if;
+  if v_stock < 1 then raise exception using message = \047NO_OPENING_STOCK\047; end if;
 
   update public.purchases
      set unit_cost = p_unit_cost,
@@ -653,14 +660,23 @@ begin
          supplier = coalesce(nullif(btrim(p_supplier), \047\047), supplier),
          purchased_at = v_when
    where product_id = p_product_id and size = v_size
-     and is_opening = true and remaining_quantity > 0\073
-  get diagnostics v_updated = row_count\073
-  if v_updated < 1 then raise exception \047NO_OPENING_STOCK\047\073 end if\073
+     and is_opening = true and remaining_quantity > 0;
+  get diagnostics v_updated = row_count;
+
+  if v_updated < 1 then
+    insert into public.purchases
+      (product_id, product_name, size, quantity, remaining_quantity, unit_cost,
+       supplier, purchased_at, is_opening, is_legacy)
+    select ps.product_id, p.name, ps.size, ps.stock, ps.stock, p_unit_cost,
+           coalesce(nullif(btrim(p_supplier), \047\047), \047\047), v_when, false, false
+      from public.product_sizes ps
+      join public.products p on p.id = ps.product_id
+     where ps.product_id = p_product_id and ps.size = v_size;
+  end if;
 
   update public.product_sizes
      set purchased_at = v_when
-   where product_id = p_product_id and size = v_size and stock > 0\073
-end\073';
-
+   where product_id = p_product_id and size = v_size and stock > 0;
+end;';
 revoke all on function public.regularize_size_cost(uuid, text, numeric, text, timestamptz) from public, anon;
 grant execute on function public.regularize_size_cost(uuid, text, numeric, text, timestamptz) to authenticated;

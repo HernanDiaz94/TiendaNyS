@@ -431,6 +431,7 @@ as E'declare
   v_size text := null;
   v_when timestamptz := coalesce(p_purchased_at, now());
   v_updated integer := 0;
+  v_stock integer := 0;
 begin
   if not public.is_store_admin() then raise exception using message = (chr(78)||chr(79)||chr(84)||chr(95)||chr(65)||chr(68)||chr(77)||chr(73)||chr(78)); end if;
   if p_size is null or char_length(btrim(p_size)) < 1 or char_length(btrim(p_size)) > 20 then
@@ -447,6 +448,12 @@ begin
     raise exception using message = (chr(73)||chr(78)||chr(86)||chr(65)||chr(76)||chr(73)||chr(68)||chr(95)||chr(68)||chr(65)||chr(84)||chr(69));
   end if;
 
+  select stock into v_stock
+    from public.product_sizes
+   where product_id = p_product_id and size = v_size;
+  if not found then raise exception using message = (chr(78)||chr(79)||chr(95)||chr(79)||chr(80)||chr(69)||chr(78)||chr(73)||chr(78)||chr(71)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75)); end if;
+  if v_stock < 1 then raise exception using message = (chr(78)||chr(79)||chr(95)||chr(79)||chr(80)||chr(69)||chr(78)||chr(73)||chr(78)||chr(71)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75)); end if;
+
   update public.purchases
      set unit_cost = p_unit_cost,
          is_opening = false,
@@ -456,12 +463,21 @@ begin
    where product_id = p_product_id and size = v_size
      and is_opening = true and remaining_quantity > 0;
   get diagnostics v_updated = row_count;
-  if v_updated < 1 then raise exception using message = (chr(78)||chr(79)||chr(95)||chr(79)||chr(80)||chr(69)||chr(78)||chr(73)||chr(78)||chr(71)||chr(95)||chr(83)||chr(84)||chr(79)||chr(67)||chr(75)); end if;
+
+  if v_updated < 1 then
+    insert into public.purchases
+      (product_id, product_name, size, quantity, remaining_quantity, unit_cost,
+       supplier, purchased_at, is_opening, is_legacy)
+    select ps.product_id, p.name, ps.size, ps.stock, ps.stock, p_unit_cost,
+           coalesce(nullif(btrim(p_supplier), left(chr(1),0)), left(chr(1),0)), v_when, false, false
+      from public.product_sizes ps
+      join public.products p on p.id = ps.product_id
+     where ps.product_id = p_product_id and ps.size = v_size;
+  end if;
 
   update public.product_sizes
      set purchased_at = v_when
    where product_id = p_product_id and size = v_size and stock > 0;
 end;';
-
 revoke all on function public.regularize_size_cost(uuid, text, numeric, text, timestamptz) from public, anon;
 grant execute on function public.regularize_size_cost(uuid, text, numeric, text, timestamptz) to authenticated;
